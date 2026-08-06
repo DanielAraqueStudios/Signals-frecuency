@@ -1,0 +1,20 @@
+# Ruflo / claude-flow
+.claude/
+.claude-flow/
+.swarm/
+ruvector.db
+
+# Claude Code project instructions
+CLAUDE.md
+
+# Node
+node_modules/
+package-lock.json
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Generated audio output
+WORK_ONE/output/
