@@ -12,9 +12,9 @@ top-level folder with its own README, dependencies, and tests.
 |---------------------|--------------------------------------|
 | Language            | Python 3.9+                          |
 | Numerical / DSP      | NumPy, SciPy                        |
-| Desktop GUI          | PyQt6, Matplotlib (embedded plots)  |
+| Desktop GUI          | PyQt6, customtkinter, Matplotlib (embedded plots) |
 | Testing              | pytest                              |
-| Audio I/O            | `winsound` (stdlib, Windows)        |
+| Audio I/O            | `winsound` (stdlib, Windows), librosa/soundfile (file-based) |
 | Tooling              | Git, claude-flow (dev-agent tooling; not part of the shipped projects) |
 
 ## Repository Structure
@@ -23,6 +23,7 @@ top-level folder with its own README, dependencies, and tests.
 Signals-frecuency/
 ├── WORK_ONE/          DTMF Dialer — signal synthesis + CLI + desktop GUI
 ├── WORK_TWO/          Fourier Square-Wave Sampling — series synthesis + visualization
+├── WORK_THREE/        Sampling & Spectral Analysis Lab — sine/square/triangular sampling, FFT, audio stats
 ├── Readme.md          This file — repository index
 └── .gitignore
 ```
@@ -59,6 +60,18 @@ pytest unit test suite.
 **Stack:** NumPy · Matplotlib · pytest
 **Entry point:** `python main.py`
 **Full docs:** [`WORK_TWO/readme.md`](WORK_TWO/readme.md)
+
+### [`WORK_THREE/` — Sampling & Spectral Analysis Lab](WORK_THREE/readme.md)
+
+A Python package covering sine/triangular/Fourier-series-square-wave
+**sampling** exercises across several sampling rates, an **ideal-vs-truncated**
+FFT comparison, and a customtkinter **desktop GUI** that runs mean/std/FFT
+statistics on animal-sound recordings to study how statistically separable
+they are.
+
+**Stack:** NumPy · SciPy · Matplotlib · customtkinter · librosa · pytest
+**Entry points:** `python main.py` (sampling/Fourier demo) · `python run_animal_gui.py` (GUI)
+**Full docs:** [`WORK_THREE/readme.md`](WORK_THREE/readme.md)
 
 > More projects will be added here as new exercises are completed, each
 > following the same pattern: its own folder, its own README, linked above.

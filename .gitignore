@@ -19,6 +19,13 @@ __pycache__/
 # Generated audio output
 WORK_ONE/output/
 
+# User-provided audio samples (large binaries, not checked in)
+WORK_THREE/audio_samples/*/*.wav
+WORK_THREE/audio_samples/*/*.mp3
+WORK_THREE/audio_samples/*/*.flac
+WORK_THREE/audio_samples/*/*.ogg
+WORK_THREE/audio_samples/*/*.m4a
+
 # Ruflo local secrets and runtime data
 .env
 .env.local
