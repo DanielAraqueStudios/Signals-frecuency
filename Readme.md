@@ -22,6 +22,7 @@ top-level folder with its own README, dependencies, and tests.
 ```
 Signals-frecuency/
 ├── WORK_ONE/          DTMF Dialer — signal synthesis + CLI + desktop GUI
+├── WORK_TWO/          Fourier Square-Wave Sampling — series synthesis + visualization
 ├── Readme.md          This file — repository index
 └── .gitignore
 ```
@@ -45,6 +46,19 @@ playhead), and a pytest unit test suite.
 **Stack:** NumPy · SciPy · PyQt6 · Matplotlib · pytest
 **Entry points:** `python main.py <number>` (CLI) · `python run_gui.py` (GUI)
 **Full docs:** [`WORK_ONE/readme.md`](WORK_ONE/readme.md)
+
+### [`WORK_TWO/` — Fourier Square-Wave Sampling](WORK_TWO/readme.md)
+
+A Python package that reconstructs a **square wave from its Fourier sine
+series** (odd harmonics, ITU-style vectorized NumPy synthesis) and
+visualizes the result across several sampling rates — illustrating Gibbs
+phenomenon and how sample density relates to the sampling theorem. Ships
+with a small testable package (synthesis + plotting split apart) and a
+pytest unit test suite.
+
+**Stack:** NumPy · Matplotlib · pytest
+**Entry point:** `python main.py`
+**Full docs:** [`WORK_TWO/readme.md`](WORK_TWO/readme.md)
 
 > More projects will be added here as new exercises are completed, each
 > following the same pattern: its own folder, its own README, linked above.
