@@ -6,7 +6,7 @@
 
 El procedimiento experimental se dividió en tres grupos: animales, instrumentos musicales y voces humanas. Cada archivo de audio se procesó con el paquete \texttt{animal\_analyzer} del proyecto \texttt{WORK\_THREE}, apoyado en las funciones genéricas de \texttt{signal\_lab/spectral.py} y en NumPy, SciPy \cite{scipy} y Matplotlib.
 
-Las tres grabaciones de animales (Gato, Perro, Gallo) son audio real descargado de Wikimedia Commons (licencias libres, ver \texttt{audio\_samples/SOURCES.md}) y se procesaron mediante \texttt{scripts/generate\_animal\_figures.py}, un script batch que llama directamente a \texttt{load\_audio} y \texttt{analyze\_audio} — las mismas funciones que usa la interfaz gráfica \texttt{run\_animal\_gui.py} para sus pestañas por categoría, de modo que ambas vías producen resultados idénticos. Las grabaciones de instrumentos y voces aún no se han sustituido por audio real; sus filas en la Sección de Resultados se procesaron conceptualmente con el mismo backend (\texttt{analyze\_audio}), pero los valores mostrados provienen todavía del borrador original.
+Las ocho grabaciones (tres animales, tres instrumentos, dos voces) se procesaron con \texttt{scripts/generate\_animal\_figures.py}, un script batch que llama directamente a \texttt{load\_audio} y \texttt{analyze\_audio} — las mismas funciones que usa la interfaz gráfica \texttt{run\_animal\_gui.py} para sus pestañas de animales, de modo que ambas vías producen resultados idénticos. Los animales y los instrumentos son audio real con licencia libre descargado de Wikimedia Commons; las dos voces son habla sintetizada localmente (Windows SAPI), usada como sustituto reproducible ante la falta de grabaciones humanas reales. La procedencia, autoría, licencia y limitaciones de cada archivo se documentan en \texttt{audio\_samples/SOURCES.md}.
 
 El procedimiento general, tal como lo implementa \texttt{analyze\_audio}, fue:
 
@@ -84,18 +84,20 @@ Nótese que estas tres grabaciones son considerablemente más cortas que los $10
 
 \subsection{Instrumentos musicales}
 
-Para estudiar diferentes registros frecuenciales se seleccionaron tres instrumentos musicales:
+Para estudiar diferentes registros frecuenciales se seleccionaron tres instrumentos musicales, con grabaciones reales descargadas de Wikimedia Commons:
 
 \begin{itemize}
-\item Contrabajo, como instrumento de baja frecuencia.
-\item Piano, como instrumento de frecuencia media.
-\item Flauta, como instrumento de frecuencia alta.
+\item \texttt{contrabajo.oga} — contrabajo de jazz (\emph{walking bass}), $44\,100$ Hz, $17.74$ s; el instrumento entra recién a los $\sim\!2.5$ s, por lo que la mayor parte de la ventana de $3$ s analizada es silencio de estudio.
+\item \texttt{piano.ogg} — piano, $44\,100$ Hz, $6.18$ s; una frase corta de varias notas, no una nota sostenida única.
+\item \texttt{flauta.ogg} — primer movimiento lento de una sonata de Bach para flauta, $44\,100$ Hz (solo se procesan sus primeros $3$ s: introducción de clavecín y entrada de la flauta $\sim\!1$ s).
 \end{itemize}
+
+Ninguna de las tres es una nota aislada y sostenida como asumiría un análisis espectral idealizado; esto se retoma en la Discusión al interpretar sus frecuencias dominantes.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{contrabajo.png}
-\caption{Señal temporal (primeros 3 s) y espectro frecuencial correspondiente al contrabajo.}
+\caption{Señal temporal (primeros 3 s) y espectro frecuencial correspondiente al contrabajo. El instrumento entra a los $\sim\!2.5$ s.}
 \label{fig:contrabajo}
 \end{figure}
 
@@ -126,25 +128,25 @@ Para estudiar diferentes registros frecuenciales se seleccionaron tres instrumen
 
 \subsection{Voces humanas}
 
-Finalmente, se analizaron dos grabaciones correspondientes a dos personas diferentes. Ambas personas pronunciaron la misma frase con el propósito de controlar el contenido lingüístico de las señales.
+Finalmente, se procesaron dos señales de voz sintetizada, generadas localmente con el motor Windows SAPI (\texttt{System.Speech.Synthesis}) usando dos voces instaladas distintas (\texttt{Microsoft David Desktop}, masculina, y \texttt{Microsoft Zira Desktop}, femenina), como sustituto reproducible mientras no se dispone de grabaciones humanas reales. \textbf{No son grabaciones de personas}; se etiquetan ``Persona 1'' y ``Persona 2'' únicamente para mantener la estructura de comparación de pares del resto del informe. Ambas voces leyeron el mismo texto, con el propósito de controlar el contenido lingüístico de las señales; al ser un motor en inglés, el texto en español se pronuncia con fonética inglesa, lo cual no afecta el análisis espectral pero sí impide comparar este resultado con locución en español real.
 
-La frase utilizada fue:
+El texto sintetizado fue:
 
 \begin{quote}
-``Hoy estamos analizando señales de voz mediante la transformada de Fourier.''
+``Hoy estamos analizando senales de voz mediante la transformada de Fourier.''
 \end{quote}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{persona1.png}
-\caption{Señal temporal (primeros 3 s) y espectro frecuencial correspondiente a la Persona 1.}
+\caption{Señal temporal (primeros 3 s) y espectro frecuencial correspondiente a la Persona 1 (voz sintetizada, \texttt{Microsoft David Desktop}).}
 \label{fig:persona1}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{persona2.png}
-\caption{Señal temporal (primeros 3 s) y espectro frecuencial correspondiente a la Persona 2.}
+\caption{Señal temporal (primeros 3 s) y espectro frecuencial correspondiente a la Persona 2 (voz sintetizada, \texttt{Microsoft Zira Desktop}).}
 \label{fig:persona2}
 \end{figure}
 

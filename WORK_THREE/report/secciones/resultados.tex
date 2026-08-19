@@ -4,7 +4,7 @@
 
 \section{Resultados}
 
-Las tres filas de animales de la Tabla~\ref{tab:resultados} se recalcularon a partir de grabaciones reales (ver \texttt{audio\_samples/SOURCES.md} para la procedencia y licencia de cada archivo) ejecutando \texttt{scripts/generate\_animal\_figures.py}, que llama directamente a \texttt{load\_audio} y \texttt{analyze\_audio}. Las filas de instrumentos y voces aún no cuentan con grabaciones propias y se conservan como valores de referencia del borrador original (\texttt{sample.tex}), señalados en la tabla.
+Las ocho filas de la Tabla~\ref{tab:resultados} se calcularon a partir de las grabaciones descritas en la Metodología (procedencia y licencia en \texttt{audio\_samples/SOURCES.md}), ejecutando \texttt{scripts/generate\_animal\_figures.py}, que llama directamente a \texttt{load\_audio} y \texttt{analyze\_audio}.
 
 \begin{table}[!t]
 \centering
@@ -22,38 +22,38 @@ Animal & Gallo & -0.0000 & 0.1708 & 1731.67 \\
 
 \midrule
 
-Instrumento$^{*}$ & Contrabajo & -1.244 & 3836.46 & 146.48 \\
-Instrumento$^{*}$ & Piano & -0.101 & 1745.00 & 384.69 \\
-Instrumento$^{*}$ & Flauta & 0.585 & 3826.29 & 432.00 \\
+Instrumento & Contrabajo & 0.0000 & 0.0162 & 66.00 \\
+Instrumento & Piano & 0.0000 & 0.1268 & 1179.33 \\
+Instrumento & Flauta & 0.0000 & 0.1876 & 546.33 \\
 
 \midrule
 
-Voz$^{*}$ & Persona 1 & 6.699 & 2778.54 & 214.30 \\
-Voz$^{*}$ & Persona 2 & -0.167 & 2153.47 & 142.47 \\
+Voz$^{\dagger}$ & Persona 1 & 0.0196 & 0.1186 & 549.67 \\
+Voz$^{\dagger}$ & Persona 2 & 0.0265 & 0.1213 & 180.00 \\
 
 \bottomrule
 \end{tabular}
 
 \vspace{2pt}
-{\footnotesize $^{*}$Valores de referencia del borrador original, pendientes de grabaciones reales.}
+{\footnotesize $^{\dagger}$Voz sintetizada (Windows SAPI), no grabación humana real; ver Metodología.}
 \end{table}
 
 \subsection{Resultados de los sonidos animales}
 
-Sobre grabaciones reales de dominio público/CC (ver \texttt{audio\_samples/SOURCES.md}), se obtuvieron frecuencias dominantes de $1545.17$ Hz para el gato, $459.73$ Hz para el perro y $1731.67$ Hz para el gallo. Las grabaciones de gato ($1.15$ s) y perro ($2.61$ s) son más cortas que la ventana de análisis de $3$ s, por lo que \texttt{analysis\_window} las procesó completas; la de gallo ($3.84$ s) sí se recortó a los primeros $3$ s. El perro presentó la frecuencia dominante más baja y el gallo la más alta. La comparación de los espectros puede observarse en la Fig.~\ref{fig:animales_comparacion}, donde los tres picos dominantes están claramente separados en frecuencia.
+Sobre grabaciones reales de dominio público/CC, se obtuvieron frecuencias dominantes de $1545.17$ Hz para el gato, $459.73$ Hz para el perro y $1731.67$ Hz para el gallo. Las grabaciones de gato ($1.15$ s) y perro ($2.61$ s) son más cortas que la ventana de análisis de $3$ s, por lo que \texttt{analysis\_window} las procesó completas; la de gallo ($3.84$ s) sí se recortó a los primeros $3$ s. El perro presentó la frecuencia dominante más baja y el gallo la más alta. La comparación de los espectros puede observarse en la Fig.~\ref{fig:animales_comparacion}, donde los tres picos dominantes están claramente separados en frecuencia.
 
 \subsection{Resultados de los instrumentos}
 
-Para los instrumentos se obtuvieron frecuencias dominantes de $146.48$ Hz para el contrabajo, $384.69$ Hz para el piano y $432.00$ Hz para la flauta (valores de referencia, ver nota de la Tabla~\ref{tab:resultados}). El contrabajo presentó claramente la frecuencia dominante más baja; el piano y la flauta presentaron valores superiores, aunque relativamente cercanos entre sí. Es importante considerar que los instrumentos musicales no producen una única frecuencia, sino una frecuencia fundamental acompañada de componentes armónicos, por lo que el espectro completo (Fig.~\ref{fig:instrumentos_comparacion}) proporciona información adicional a la frecuencia dominante aislada.
+Para los instrumentos se obtuvieron frecuencias dominantes de $66.00$ Hz para el contrabajo, $1179.33$ Hz para el piano y $546.33$ Hz para la flauta (Fig.~\ref{fig:instrumentos_comparacion}). El contrabajo presentó, como se esperaba de un instrumento grave, la frecuencia dominante más baja de las ocho señales de la Tabla~\ref{tab:resultados}; sin embargo, como se señala en la Metodología, el instrumento solo suena durante los últimos $\sim\!0.5$ s de la ventana de $3$ s analizada, por lo que este valor describe una nota corta, no un registro sostenido. El piano, al tocar varias notas dentro de la ventana en lugar de una sola, dio la frecuencia dominante \emph{más alta} de las tres —por encima incluso de la flauta—, lo que ilustra que ``frecuencia dominante'' identifica el pico espectral de mayor energía en la ventana analizada, no necesariamente la nota fundamental de un único evento sonoro.
 
 \subsection{Resultados de las voces}
 
-Las frecuencias dominantes de referencia para las dos personas fueron $214.30$ Hz y $142.47$ Hz, respectivamente. Aunque ambas personas pronunciaron la misma frase, se observaron diferencias en sus espectros frecuenciales (Fig.~\ref{fig:personas_comparacion}). Una sola grabación por persona no sería suficiente, en cualquier caso, para establecer que estas características permiten identificar de manera general a un individuo.
+Las frecuencias dominantes obtenidas para las dos voces sintetizadas fueron $549.67$ Hz (Persona 1, voz masculina \texttt{David}) y $180.00$ Hz (Persona 2, voz femenina \texttt{Zira}). Aunque ambas leyeron el mismo texto, se observaron diferencias claras en sus espectros (Fig.~\ref{fig:personas_comparacion}), consistente con que corresponden a dos motores de voz con timbre y tono base distintos. Al ser síntesis de voz y no grabaciones humanas, este resultado no debe interpretarse como evidencia sobre variabilidad de voces reales, solo como una comparación de pares reproducible con la misma herramienta.
 
 \subsection{Separabilidad estadística cuantitativa}
 \label{sec:resultados-separabilidad}
 
-Aplicando la Ec.~\ref{eq:separabilidad} a cada par de señales dentro de una misma categoría se obtiene la Tabla~\ref{tab:separabilidad}, generada con la misma lógica que implementa \texttt{compare\_categories}. Solo la sección de animales usa los valores reales de la Tabla~\ref{tab:resultados}; instrumentos y voces heredan la limitación de ser valores de referencia.
+Aplicando la Ec.~\ref{eq:separabilidad} a cada par de señales dentro de una misma categoría, con las ocho señales de la Tabla~\ref{tab:resultados}, se obtiene la Tabla~\ref{tab:separabilidad}, generada con la misma lógica que implementa \texttt{compare\_categories}.
 
 \begin{table}[!t]
 \centering
@@ -71,19 +71,16 @@ Perro--Gallo & 1271.94 & 0.2981 & 4267.15 & Separables \\
 
 \midrule
 
-Contrabajo--Piano$^{*}$ & 238.21 & 5581.46 & 0.04 & Solapados \\
-Contrabajo--Flauta$^{*}$ & 285.52 & 7662.75 & 0.04 & Solapados \\
-Piano--Flauta$^{*}$ & 47.31 & 5571.29 & 0.01 & Solapados \\
+Contrabajo--Piano & 1113.33 & 0.1430 & 7787.68 & Separables \\
+Contrabajo--Flauta & 480.33 & 0.2037 & 2357.60 & Separables \\
+Piano--Flauta & 633.00 & 0.3143 & 2013.75 & Separables \\
 
 \midrule
 
-Persona 1--Persona 2$^{*}$ & 71.83 & 4932.01 & 0.01 & Solapados \\
+Persona 1--Persona 2 & 369.67 & 0.2399 & 1540.75 & Separables \\
 
 \bottomrule
 \end{tabular}
-
-\vspace{2pt}
-{\footnotesize $^{*}$Valores de referencia del borrador original, pendientes de grabaciones reales.}
 \end{table}
 
-Con el umbral definido en la Sección~\ref{sec:separabilidad} ($S_{a,b} \geq 3$ para separabilidad clara), los tres pares de animales con datos reales resultan claramente separables ($S \in [442, 4267]$), mientras que los pares de instrumentos y voces —calculados sobre los valores de referencia, en una escala de amplitud distinta— quedan muy por debajo del umbral. Esta discrepancia de dos a cuatro órdenes de magnitud entre ambos grupos no es solo un efecto de los datos: expone una debilidad del propio puntaje, discutida en la Sección~\ref{sec:discusion-unidades}.
+Con el umbral definido en la Sección~\ref{sec:separabilidad} ($S_{a,b} \geq 3$ para separabilidad clara), los \emph{siete} pares evaluados resultan claramente separables, con puntajes entre $442$ y $7788$ — dos a cuatro órdenes de magnitud por encima del umbral. Esta uniformidad, en lugar de reforzar la lectura cualitativa, es en sí misma un hallazgo: se discute en la Sección~\ref{sec:discusion-unidades}.
