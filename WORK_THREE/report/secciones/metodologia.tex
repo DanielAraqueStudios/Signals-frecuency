@@ -1,0 +1,154 @@
+% ============================================================
+% III. METODOLOGÍA
+% ============================================================
+
+\section{Metodología}
+
+El procedimiento experimental se dividió en tres grupos: animales, instrumentos musicales y voces humanas. Cada archivo de audio se almacenó en formato WAV y se procesó con el paquete \texttt{animal\_analyzer} del proyecto \texttt{WORK\_THREE}, apoyado en las funciones genéricas de \texttt{signal\_lab/spectral.py} y en NumPy, SciPy \cite{scipy} y Matplotlib.
+
+Las tres grabaciones de animales (Gato, Perro, Gallo) se cargaron y analizaron de forma interactiva desde la interfaz gráfica \texttt{run\_animal\_gui.py} (pestañas dedicadas por categoría). Las funciones de análisis son independientes de la categoría, por lo que las grabaciones de instrumentos y voces se procesaron invocando directamente el mismo backend (\texttt{analyze\_audio}) de forma programática, sin pasar por esas pestañas específicas de la GUI.
+
+El procedimiento general, tal como lo implementa \texttt{analyze\_audio}, fue:
+
+\begin{enumerate}
+
+\item Cargar el archivo de audio con \texttt{load\_audio}, que usa \texttt{librosa.load(path, sr=None, mono=True)} y preserva la frecuencia de muestreo nativa del archivo.
+
+\item Registrar la frecuencia de muestreo y la duración total de la grabación.
+
+\item Acotar la señal a los primeros $3$ s (\texttt{analysis\_window}, \texttt{ANALYSIS\_WINDOW\_S = 3.0}), dado que las grabaciones originales tienen una duración aproximada de $10$ s y solo esa ventana inicial se somete a análisis espectral y estadístico.
+
+\item Representar la señal ventaneada en el dominio temporal.
+
+\item Calcular la FFT de un solo lado con \texttt{compute\_fft} (\texttt{numpy.fft.rfft}, magnitud normalizada por $2/N$).
+
+\item Obtener el espectro de magnitud y graficarlo.
+
+\item Determinar la frecuencia dominante con \texttt{dominant\_frequency}, ignorando la componente en $0$ Hz.
+
+\item Calcular la media y la desviación estándar con \texttt{signal\_stats}.
+
+\item Calcular el puntaje de separabilidad estadística (Ec.~\ref{eq:separabilidad}) entre cada par de señales con \texttt{separability\_score} / \texttt{compare\_categories}.
+
+\item Comparar los resultados obtenidos entre las diferentes señales.
+
+\end{enumerate}
+
+\subsection{Señales animales}
+
+Se analizaron tres sonidos correspondientes a un gato, un perro y un gallo, cargados desde \texttt{audio\_samples/gato/}, \texttt{audio\_samples/perro/} y \texttt{audio\_samples/gallo/} respectivamente.
+
+\begin{itemize}
+\item Gato.wav
+\item Perro.wav
+\item Gallo.wav
+\end{itemize}
+
+% ============================================================
+% FIGURAS ANIMALES
+% ============================================================
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gato.png}
+\caption{Señal temporal (primeros 3 s) y espectro frecuencial correspondiente al sonido de un gato.}
+\label{fig:gato}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{perro.png}
+\caption{Señal temporal (primeros 3 s) y espectro frecuencial correspondiente al sonido de un perro.}
+\label{fig:perro}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gallo.png}
+\caption{Señal temporal (primeros 3 s) y espectro frecuencial correspondiente al sonido de un gallo.}
+\label{fig:gallo}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{animales_comparacion.png}
+\caption{Comparación de los espectros frecuenciales de los sonidos animales.}
+\label{fig:animales_comparacion}
+\end{figure}
+
+% ============================================================
+% INSTRUMENTOS
+% ============================================================
+
+\subsection{Instrumentos musicales}
+
+Para estudiar diferentes registros frecuenciales se seleccionaron tres instrumentos musicales:
+
+\begin{itemize}
+\item Contrabajo, como instrumento de baja frecuencia.
+\item Piano, como instrumento de frecuencia media.
+\item Flauta, como instrumento de frecuencia alta.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{contrabajo.png}
+\caption{Señal temporal (primeros 3 s) y espectro frecuencial correspondiente al contrabajo.}
+\label{fig:contrabajo}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{piano.png}
+\caption{Señal temporal (primeros 3 s) y espectro frecuencial correspondiente al piano.}
+\label{fig:piano}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{flauta.png}
+\caption{Señal temporal (primeros 3 s) y espectro frecuencial correspondiente a la flauta.}
+\label{fig:flauta}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{instrumentos_comparacion.png}
+\caption{Comparación de los espectros frecuenciales de los instrumentos musicales.}
+\label{fig:instrumentos_comparacion}
+\end{figure}
+
+% ============================================================
+% VOCES
+% ============================================================
+
+\subsection{Voces humanas}
+
+Finalmente, se analizaron dos grabaciones correspondientes a dos personas diferentes. Ambas personas pronunciaron la misma frase con el propósito de controlar el contenido lingüístico de las señales.
+
+La frase utilizada fue:
+
+\begin{quote}
+``Hoy estamos analizando señales de voz mediante la transformada de Fourier.''
+\end{quote}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{persona1.png}
+\caption{Señal temporal (primeros 3 s) y espectro frecuencial correspondiente a la Persona 1.}
+\label{fig:persona1}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{persona2.png}
+\caption{Señal temporal (primeros 3 s) y espectro frecuencial correspondiente a la Persona 2.}
+\label{fig:persona2}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{personas_comparacion.png}
+\caption{Comparación de los espectros frecuenciales de las dos voces humanas.}
+\label{fig:personas_comparacion}
+\end{figure}

@@ -64,8 +64,13 @@ WORK_THREE/
 │   ├── test_waveforms.py
 │   ├── test_spectral.py
 │   └── test_animal_analyzer.py
+├── report/                       IEEE-conference LaTeX write-up of item 8
+│   ├── main.tex                 Preamble + \input of every section
+│   ├── secciones/                One .tex file per report section
+│   └── figuras/                  Drop exported GUI plots here (see report/main.tex)
 ├── main.py                      Entry point: renders items 4, 5, 6, 7, 9
 ├── run_animal_gui.py            Entry point: launches the item 8 GUI
+├── sample.tex                    Original draft report (superseded by report/main.tex)
 └── readme.md
 ```
 

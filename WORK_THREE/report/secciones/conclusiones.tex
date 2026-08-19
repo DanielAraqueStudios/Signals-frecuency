@@ -1,0 +1,15 @@
+% ============================================================
+% VI. CONCLUSIONES
+% ============================================================
+
+\section{Conclusiones}
+
+La Transformada Rápida de Fourier, calculada mediante \texttt{signal\_lab.spectral.compute\_fft}, permitió transformar las ocho señales de audio del dominio temporal al dominio frecuencial, facilitando la identificación de componentes espectrales característicos de cada muestra dentro de la ventana de análisis de 3 s.
+
+En los sonidos animales se observaron diferencias claras entre las frecuencias dominantes del gato, perro y gallo. Para las muestras utilizadas, estas diferencias absolutas permitieron distinguir las señales por su comportamiento espectral; sin embargo, al normalizarlas por la dispersión de amplitud mediante el puntaje de separabilidad (Ec.~\ref{eq:separabilidad}), ningún par de categorías —ni entre animales, ni entre instrumentos, ni entre voces— superó el umbral de separabilidad parcial.
+
+En los instrumentos musicales se verificó una tendencia creciente en la frecuencia dominante desde el contrabajo hasta la flauta, aunque la separación entre piano y flauta fue menor que la existente entre el contrabajo y los otros instrumentos. En las voces humanas también se observaron diferencias espectrales entre las dos personas, a pesar de que ambas pronunciaron la misma frase, lo que demuestra que las características individuales de la voz se reflejan en el dominio frecuencial.
+
+La media y la desviación estándar, calculadas de forma aislada, no demostraron ser características suficientes para identificar las diferentes señales; en contraste, la frecuencia dominante y el análisis del espectro completo proporcionaron información cualitativamente más relevante para la diferenciación. El puntaje de separabilidad introducido en este trabajo aporta, además, una forma cuantitativa y reproducible de contrastar esa lectura cualitativa, y en este conjunto de datos evidenció que la separación observable en las frecuencias dominantes es pequeña frente a la variabilidad de amplitud reportada.
+
+Finalmente, los resultados obtenidos deben considerarse exploratorios, tanto por el reducido número de muestras (un registro por categoría, dos para voces) como por la discrepancia de escala identificada en la Sección de Discusión entre los valores de desviación estándar reportados y los que produce el pipeline normalizado de \texttt{animal\_analyzer}. Los próximos pasos naturales son: (1) recolectar varias grabaciones independientes por categoría en \texttt{audio\_samples/}, (2) re-ejecutar \texttt{analyze\_audio} sobre ese conjunto ampliado para verificar la escala de $\sigma$, y (3) incorporar características espectrales adicionales (armónicos, energía por bandas) antes de evaluar un clasificador automático de fuentes sonoras.

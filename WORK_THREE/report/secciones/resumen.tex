@@ -1,0 +1,19 @@
+% ============================================================
+% RESUMEN
+% ============================================================
+
+\begin{abstract}
+
+En este trabajo se realiza un análisis espectral de ocho señales de audio mediante la Transformada Rápida de Fourier (FFT), utilizando la herramienta desarrollada en el proyecto \texttt{WORK\_THREE} (paquetes \texttt{signal\_lab} y \texttt{animal\_analyzer}). Se estudiaron tres categorías de señales: sonidos producidos por animales, sonidos correspondientes a instrumentos musicales y voces humanas. Cada grabación se cargó a su frecuencia de muestreo nativa y se acotó a los primeros tres segundos, siguiendo la ventana de análisis fija (\texttt{ANALYSIS\_WINDOW\_S = 3.0~s}) implementada en \texttt{animal\_analyzer/core.py}. Para cada señal se obtuvo su representación en el dominio temporal y frecuencial, además de calcular la media, la desviación estándar y la frecuencia dominante. Adicionalmente, se introdujo una métrica cuantitativa de separabilidad estadística entre pares de señales, definida como la razón entre la diferencia de frecuencias dominantes y la suma de sus desviaciones estándar. Los resultados permitieron observar diferencias en la distribución espectral de las señales, pero al normalizar dichas diferencias por la variabilidad de amplitud reportada, la métrica de separabilidad indica que ningún par de señales resulta claramente separable con las características evaluadas. Esto refuerza que la frecuencia dominante por sí sola, sin considerar su dispersión, puede sobreestimar la capacidad de distinguir las señales, y que el reducido número de muestras utilizadas no permite establecer conclusiones estadísticas generalizables.
+
+\end{abstract}
+
+% ============================================================
+% PALABRAS CLAVE
+% ============================================================
+
+\begin{IEEEkeywords}
+
+Transformada Rápida de Fourier, FFT, procesamiento digital de señales, análisis espectral, señales de audio, frecuencia dominante, separabilidad estadística.
+
+\end{IEEEkeywords}

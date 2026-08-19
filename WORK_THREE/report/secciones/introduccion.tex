@@ -1,0 +1,13 @@
+% ============================================================
+% I. INTRODUCCIÓN
+% ============================================================
+
+\section{Introducción}
+
+Las señales de audio constituyen un tipo de señal temporal cuya información puede analizarse tanto en el dominio del tiempo como en el dominio de la frecuencia. Mientras que la representación temporal permite observar cómo varía la amplitud de una señal a lo largo del tiempo, el análisis frecuencial permite identificar los componentes espectrales que la conforman.
+
+Una de las herramientas fundamentales para realizar este análisis es la Transformada de Fourier, la cual permite representar una señal en términos de sus componentes frecuenciales. En aplicaciones digitales, el cálculo directo de la Transformada Discreta de Fourier puede resultar computacionalmente costoso, por lo que se utiliza la Transformada Rápida de Fourier (FFT), un algoritmo eficiente para obtener la representación espectral de una señal.
+
+En el presente trabajo se analiza un conjunto de señales de audio correspondientes a tres animales, tres instrumentos musicales y dos personas. El procesamiento se realizó con la herramienta desarrollada en \texttt{WORK\_THREE/animal\_analyzer}, que carga cada grabación, la acota a una ventana de análisis fija y calcula, sobre esa ventana, su representación temporal, su espectro mediante FFT, su media y su desviación estándar.
+
+El objetivo principal es determinar si las características obtenidas permiten diferenciar las señales pertenecientes a cada categoría y, más específicamente, cuantificar mediante una métrica de separabilidad estadística cuáles de estas características presentan mayor utilidad para su identificación.

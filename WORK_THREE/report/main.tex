@@ -1,0 +1,85 @@
+% ============================================================
+% Análisis espectral de señales de audio (item 8, WORK_THREE)
+%
+% Refactorizado a partir de WORK_THREE/sample.tex para que la
+% metodología descrita coincida con la implementación real del
+% proyecto:
+%   - signal_lab/spectral.py      -> compute_fft, dominant_frequency,
+%                                     signal_stats
+%   - animal_analyzer/core.py     -> load_audio, analysis_window,
+%                                     analyze_audio, separability_score,
+%                                     compare_categories
+%   - animal_analyzer/gui.py      -> run_animal_gui.py (interfaz gráfica)
+%
+% Para compilar: pdflatex main.tex (dos pasadas si se usa \ref/\cite)
+% Coloque las figuras exportadas de la GUI en report/figuras/ con los
+% nombres indicados en secciones/resultados.tex.
+% ============================================================
+
+\documentclass[conference]{IEEEtran}
+
+% ============================================================
+% PAQUETES
+% ============================================================
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+
+\usepackage{cite}
+\usepackage{url}
+
+\usepackage{xcolor}
+
+\graphicspath{{figuras/}}
+
+% ============================================================
+% INFORMACIÓN DEL DOCUMENTO
+% ============================================================
+
+\title{
+Análisis espectral de señales de audio mediante la Transformada Rápida de Fourier para la identificación de sonidos animales, instrumentos musicales y voces humanas
+}
+
+\author{
+\IEEEauthorblockN{
+Yuber Garnica,
+Miguel Gordillo,
+% TODO: reemplazar por el nombre completo del tercer autor
+Nombre Apellido
+}
+
+\IEEEauthorblockA{
+Programa de Ingeniería Mecatrónica\\
+Universidad Militar Nueva Granada\\
+Bogotá, Colombia\\
+correo@ejemplo.com
+}
+}
+
+% ============================================================
+% DOCUMENTO
+% ============================================================
+
+\begin{document}
+
+\maketitle
+
+\input{secciones/resumen}
+\input{secciones/introduccion}
+\input{secciones/fundamento}
+\input{secciones/metodologia}
+\input{secciones/resultados}
+\input{secciones/discusion}
+\input{secciones/conclusiones}
+\input{secciones/referencias}
+
+\end{document}

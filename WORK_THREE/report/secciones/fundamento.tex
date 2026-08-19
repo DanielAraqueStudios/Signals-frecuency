@@ -1,0 +1,103 @@
+% ============================================================
+% II. FUNDAMENTO TEÓRICO
+% ============================================================
+
+\section{Fundamento teórico}
+
+\subsection{Señales de audio}
+
+Una señal de audio puede representarse como una función de amplitud dependiente del tiempo, denotada como $x(t)$. En sistemas digitales, una señal analógica es muestreada a una frecuencia determinada para obtener una secuencia discreta \cite{oppenheim}:
+
+\begin{equation}
+x[n] = x(nT_s)
+\end{equation}
+
+donde $T_s$ representa el periodo de muestreo.
+
+Las grabaciones utilizadas en este trabajo se cargaron a su frecuencia de muestreo nativa mediante \texttt{librosa.load(path, sr=None, mono=True)} (función \texttt{load\_audio} de \texttt{animal\_analyzer/core.py}), de modo que la implementación no asume una frecuencia fija; el conjunto de audio empleado en este estudio se registró a $f_s = 48\,000$ Hz. De acuerdo con el teorema de muestreo de Nyquist, la máxima frecuencia representable sin aliasing es:
+
+\begin{equation}
+f_{\max} = \frac{f_s}{2}
+\end{equation}
+
+Por lo tanto, para este conjunto de grabaciones:
+
+\begin{equation}
+f_{\max} = \frac{48000}{2} = 24000\text{ Hz}
+\end{equation}
+
+\subsection{Transformada de Fourier}
+
+La Transformada de Fourier permite representar una señal en función de sus componentes frecuenciales. Para una señal continua puede expresarse como \cite{oppenheim}:
+
+\begin{equation}
+X(f) =
+\int_{-\infty}^{\infty}
+x(t)e^{-j2\pi ft}dt
+\end{equation}
+
+Esta transformación permite analizar qué frecuencias están presentes en una señal y con qué magnitud.
+
+\subsection{Transformada Discreta de Fourier}
+
+Para señales digitales se utiliza la Transformada Discreta de Fourier (DFT) \cite{lyons}:
+
+\begin{equation}
+X[k] =
+\sum_{n=0}^{N-1}
+x[n]e^{-j2\pi kn/N}
+\end{equation}
+
+donde $N$ representa el número de muestras de la ventana analizada.
+
+\subsection{Transformada Rápida de Fourier}
+
+La Transformada Rápida de Fourier (FFT) es un algoritmo utilizado para calcular eficientemente la DFT \cite{lyons}. La función \texttt{compute\_fft} de \texttt{signal\_lab/spectral.py} implementa este cálculo apoyándose en \texttt{numpy.fft.rfft} \cite{numpy}, que aprovecha la simetría del espectro de una señal real para devolver únicamente las frecuencias no negativas.
+
+La magnitud del espectro se normaliza por el número de muestras $N$ de la ventana analizada:
+
+\begin{equation}
+|X[k]| =
+\frac{2}{N}
+\sqrt{
+\operatorname{Re}(X[k])^2+
+\operatorname{Im}(X[k])^2
+}
+\end{equation}
+
+La frecuencia dominante (\texttt{dominant\_frequency}) se define como aquella frecuencia distinta de $0$ Hz asociada al máximo valor de magnitud del espectro; la componente en $0$ Hz (nivel DC) se excluye explícitamente porque refleja el desplazamiento de amplitud de la grabación y no un contenido tonal.
+
+\subsection{Media y desviación estándar}
+
+La media de una señal discreta se calcula mediante \texttt{signal\_stats} como:
+
+\begin{equation}
+\mu =
+\frac{1}{N}
+\sum_{n=1}^{N}x[n]
+\end{equation}
+
+y la desviación estándar poblacional como:
+
+\begin{equation}
+\sigma =
+\sqrt{
+\frac{1}{N}
+\sum_{n=1}^{N}
+(x[n]-\mu)^2
+}
+\end{equation}
+
+Estas medidas permiten caracterizar estadísticamente la amplitud de las señales dentro de la ventana analizada.
+
+\subsection{Separabilidad estadística entre categorías}
+\label{sec:separabilidad}
+
+Para complementar la comparación cualitativa de espectros, \texttt{animal\_analyzer/core.py} implementa un puntaje de separabilidad entre dos señales $a$ y $b$, análogo a un estadístico $t$ de dos muestras, que relaciona la distancia entre sus frecuencias dominantes con su dispersión de amplitud combinada:
+
+\begin{equation}
+S_{a,b} = \frac{\left| f_{d,a} - f_{d,b} \right|}{\sigma_a + \sigma_b}
+\label{eq:separabilidad}
+\end{equation}
+
+La función \texttt{compare\_categories} clasifica cada par según umbrales fijos sobre $S_{a,b}$: $S_{a,b} \geq 3$ se interpreta como \emph{claramente separables}, $1 \leq S_{a,b} < 3$ como \emph{parcialmente separables}, y $S_{a,b} < 1$ como \emph{espectros probablemente solapados}. Se trata de una heurística de un solo pico espectral y dispersión global, no de un clasificador entrenado; su valor está en exponer si una diferencia de frecuencia dominante que parece grande en términos absolutos sigue siendo pequeña frente a la variabilidad propia de cada señal.
