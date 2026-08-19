@@ -4,9 +4,9 @@
 
 \section{Metodología}
 
-El procedimiento experimental se dividió en tres grupos: animales, instrumentos musicales y voces humanas. Cada archivo de audio se almacenó en formato WAV y se procesó con el paquete \texttt{animal\_analyzer} del proyecto \texttt{WORK\_THREE}, apoyado en las funciones genéricas de \texttt{signal\_lab/spectral.py} y en NumPy, SciPy \cite{scipy} y Matplotlib.
+El procedimiento experimental se dividió en tres grupos: animales, instrumentos musicales y voces humanas. Cada archivo de audio se procesó con el paquete \texttt{animal\_analyzer} del proyecto \texttt{WORK\_THREE}, apoyado en las funciones genéricas de \texttt{signal\_lab/spectral.py} y en NumPy, SciPy \cite{scipy} y Matplotlib.
 
-Las tres grabaciones de animales (Gato, Perro, Gallo) se cargaron y analizaron de forma interactiva desde la interfaz gráfica \texttt{run\_animal\_gui.py} (pestañas dedicadas por categoría). Las funciones de análisis son independientes de la categoría, por lo que las grabaciones de instrumentos y voces se procesaron invocando directamente el mismo backend (\texttt{analyze\_audio}) de forma programática, sin pasar por esas pestañas específicas de la GUI.
+Las tres grabaciones de animales (Gato, Perro, Gallo) son audio real descargado de Wikimedia Commons (licencias libres, ver \texttt{audio\_samples/SOURCES.md}) y se procesaron mediante \texttt{scripts/generate\_animal\_figures.py}, un script batch que llama directamente a \texttt{load\_audio} y \texttt{analyze\_audio} — las mismas funciones que usa la interfaz gráfica \texttt{run\_animal\_gui.py} para sus pestañas por categoría, de modo que ambas vías producen resultados idénticos. Las grabaciones de instrumentos y voces aún no se han sustituido por audio real; sus filas en la Sección de Resultados se procesaron conceptualmente con el mismo backend (\texttt{analyze\_audio}), pero los valores mostrados provienen todavía del borrador original.
 
 El procedimiento general, tal como lo implementa \texttt{analyze\_audio}, fue:
 
@@ -36,13 +36,15 @@ El procedimiento general, tal como lo implementa \texttt{analyze\_audio}, fue:
 
 \subsection{Señales animales}
 
-Se analizaron tres sonidos correspondientes a un gato, un perro y un gallo, cargados desde \texttt{audio\_samples/gato/}, \texttt{audio\_samples/perro/} y \texttt{audio\_samples/gallo/} respectivamente.
+Se analizaron tres sonidos correspondientes a un gato, un perro y un gallo, cargados desde \texttt{audio\_samples/gato/}, \texttt{audio\_samples/perro/} y \texttt{audio\_samples/gallo/} respectivamente. Las tres grabaciones provienen de Wikimedia Commons bajo licencia libre (GFDL / CC BY-SA); la procedencia, autoría y licencia exacta de cada archivo se documenta en \texttt{audio\_samples/SOURCES.md}.
 
 \begin{itemize}
-\item Gato.wav
-\item Perro.wav
-\item Gallo.wav
+\item \texttt{gato.ogg} — $44\,100$ Hz, $1.15$ s
+\item \texttt{perro.ogg} — $44\,100$ Hz, $2.61$ s
+\item \texttt{gallo.ogg} — $48\,000$ Hz, $3.84$ s
 \end{itemize}
+
+Nótese que estas tres grabaciones son considerablemente más cortas que los $10$ s asumidos en la Introducción para el conjunto original; gato y perro son incluso más cortas que la ventana de análisis de $3$ s, por lo que \texttt{analysis\_window} las procesa completas en lugar de recortarlas.
 
 % ============================================================
 % FIGURAS ANIMALES
