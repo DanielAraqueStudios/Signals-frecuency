@@ -66,11 +66,14 @@ pytest unit test suite.
 A Python package covering sine/triangular/Fourier-series-square-wave
 **sampling** exercises across several sampling rates, an **ideal-vs-truncated**
 FFT comparison, and a customtkinter **desktop GUI** that runs mean/std/FFT
-statistics on animal-sound recordings to study how statistically separable
-they are.
+statistics on animal, instrument, and voice recordings to study how
+statistically separable they are. Includes a modular IEEE-conference
+**LaTeX report** (`report/main.tex`) built from real audio (animals and
+instruments sourced from Wikimedia Commons, voices synthesized locally),
+with every figure and result table generated from the actual pipeline.
 
-**Stack:** NumPy · SciPy · Matplotlib · customtkinter · librosa · pytest
-**Entry points:** `python main.py` (sampling/Fourier demo) · `python run_animal_gui.py` (GUI)
+**Stack:** NumPy · SciPy · Matplotlib · customtkinter · librosa · pytest · LaTeX
+**Entry points:** `python main.py` (sampling/Fourier demo) · `python run_animal_gui.py` (GUI) · `report/main.tex` (report)
 **Full docs:** [`WORK_THREE/readme.md`](WORK_THREE/readme.md)
 
 > More projects will be added here as new exercises are completed, each
