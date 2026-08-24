@@ -22,19 +22,16 @@ folder with its own README, dependencies, and tests, grouped under a
 
 ## Repository Structure
 
-```
-Signals-frecuency/
-├── THEORY/
-│   └── FIRST_ROUND/
-│       ├── WORK/
-│       │   ├── WORK_ONE/      DTMF Dialer — signal synthesis + CLI + desktop GUI
-│       │   ├── WORK_TWO/      Fourier Square-Wave Sampling — series synthesis + visualization
-│       │   └── WORK_THREE/    Sampling & Spectral Analysis Lab — sine/square/triangular sampling, FFT, audio stats
-│       └── TEST/              Sampling, Quantization, Audio FFT & Embedded Timing — CSV/audio analysis + ESP32 firmware
-├── LAB_TESTING/                Reserved for upcoming lab work (currently empty)
-├── Readme.md                   This file — repository index
-└── .gitignore
-```
+- [`THEORY/`](THEORY/) — assignment rounds
+  - [`FIRST_ROUND/`](THEORY/FIRST_ROUND/)
+    - [`WORK/`](THEORY/FIRST_ROUND/WORK/)
+      - [`WORK_ONE/`](THEORY/FIRST_ROUND/WORK/WORK_ONE/) — DTMF Dialer
+      - [`WORK_TWO/`](THEORY/FIRST_ROUND/WORK/WORK_TWO/) — Fourier Square-Wave Sampling
+      - [`WORK_THREE/`](THEORY/FIRST_ROUND/WORK/WORK_THREE/) — Sampling & Spectral Analysis Lab
+    - [`TEST/`](THEORY/FIRST_ROUND/TEST/) — Sampling, Quantization, Audio FFT & Embedded Timing
+- `LAB_TESTING/` — reserved for upcoming lab work (empty, not yet tracked)
+- [`Readme.md`](Readme.md) — this file, the repository index
+- [`.gitignore`](.gitignore)
 
 Each project folder is independent: it has its own README with setup,
 usage, and API details. This root README is only an index — see the
@@ -91,11 +88,10 @@ CSV signal, **sampling + DAC-style quantization** of a 100 Hz sine to
 illustrate aliasing, an **FFT comparison** of three real audio sources
 (violin, drum, cat), and minimal **ESP32-WROOM firmware** comparing three
 concurrency mechanisms (busy loop, dual-core, hardware-timer interrupt) for
-periodic analog sampling under a variable compute load. Includes a modular
-IEEE-conference **LaTeX report** (`report/main.tex`) built from the real CSV
-and audio data; the embedded-timing section is explicitly labeled as a
-documented simulation, since no physical ESP32/Arduino hardware was
-available to flash and measure.
+periodic analog sampling under a variable compute load, flashed and measured
+on a real ESP32-WROOM board. Includes a modular IEEE-conference **LaTeX
+report** (`report/main.tex`) built entirely from real data — CSV, audio, and
+serial-captured firmware timing.
 
 **Stack:** NumPy · SciPy · Matplotlib · pytest · LaTeX · Arduino/ESP32 (C++)
 **Entry points:** `python main.py` (items 1-3) · `firmware/` (item 4 sketches + logs) · `report/main.tex` (report)
