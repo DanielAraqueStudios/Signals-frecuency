@@ -46,11 +46,13 @@ TEST/
 │   ├── violin.wav
 │   ├── tambor.wav
 │   └── gato.wav
-├── firmware/                     Item 4: ESP32-WROOM sketches, flashed and captured on real hardware
+├── firmware/                     Item 4: ESP32-WROOM (a/b/c) + Arduino Uno (a/c) sketches
 │   ├── esp32_a_busy_loop/
 │   ├── esp32_b_dualcore/
 │   ├── esp32_c_interrupt/
-│   ├── real_logs/                Raw Serial Monitor captures, 8 samples x 3 sketches x 3 N values
+│   ├── arduino_uno_a_busy_loop/  Uno has no second core -> no 4(b) variant
+│   ├── arduino_uno_c_interrupt/  Timer1 CTC-mode ISR instead of ESP32's timerBegin
+│   ├── real_logs/                Raw Serial Monitor captures (ESP32 done, Uno pending)
 │   └── README.md                 Wiring + measured timing/precision analysis
 ├── tests/
 │   ├── test_csv_signal.py
@@ -97,12 +99,15 @@ python main.py --show     # also open interactive plot windows
 
 ## Item 4 — Firmware
 
-All three sketches were flashed on a real ESP32-WROOM board and their serial
-output captured directly with the Arduino IDE's Serial Monitor (115200
-baud). `firmware/README.md` documents the wiring, the three sketches, and
-the measured timing/precision analysis; the raw captures (8 samples per
-sketch/`N` combination) are in `firmware/real_logs/`. See
-`report/secciones/embebidos.tex` for the write-up.
+Per the assignment, the ESP32-WROOM gets all three mechanisms (4a/4b/4c);
+the Arduino Uno gets only 4(a) and 4(c), since its ATmega328P has no second
+core and no FreeRTOS for a dual-core variant. All three ESP32 sketches were
+flashed on a real board and their serial output captured directly with the
+Arduino IDE's Serial Monitor (115200 baud) — see `firmware/real_logs/` and
+`report/secciones/embebidos.tex`. The two Uno sketches
+(`arduino_uno_a_busy_loop/`, `arduino_uno_c_interrupt/`) are written and
+ready to flash, but still need a real capture — `firmware/README.md` has
+the pending-data note and expected wiring/timing analysis.
 
 ## Testing
 

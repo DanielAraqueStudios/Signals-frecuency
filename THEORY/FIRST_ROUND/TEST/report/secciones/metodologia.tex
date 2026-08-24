@@ -26,15 +26,17 @@ Three real WAV recordings were used:
 
 Each file was loaded with \texttt{scipy.io.wavfile} (\texttt{load\_wav}), downmixed to a single channel if stereo, and normalized to $[-1,1]$. The single-sided magnitude spectrum (\texttt{compute\_fft\_spectrum}) and dominant frequency were computed for each full signal.
 
-\subsection{Item 4 — Sampling precision on an ESP32-WROOM}
+\subsection{Item 4 — Sampling precision on ESP32-WROOM and Arduino Uno}
 \label{sec:metodologia-embebidos}
 
-Three minimal Arduino sketches were designed for an ESP32-WROOM (\texttt{firmware/} folder), each reading three potentiometers (\texttt{GPIO34}, \texttt{GPIO35}, \texttt{GPIO32}, ADC1 channels) at a nominal period of $100$ ms, while the processor concurrently runs a blocking summation from $1$ to $N$ (with $N \in \{1\,000\,000,\ 10\,000\,000,\ 100\,000\,000\}$):
+Per the assignment, this item was designed for two boards: an ESP32-WROOM, which supports all three mechanisms, and an Arduino Uno, which — having a single-core ATmega328P with no FreeRTOS — only supports mechanisms 4(a) and 4(c) (there is no second core to pin a 4(b)-style task to). Each sketch reads three potentiometers at a nominal period of $100$ ms, while the processor concurrently runs a blocking summation from $1$ to $N$ (with $N \in \{1\,000\,000,\ 10\,000\,000,\ 100\,000\,000\}$):
 
 \begin{enumerate}
-\item \textbf{4(a) — busy loop}: everything (sampling and summation) happens inside \texttt{loop()}, on a single thread.
-\item \textbf{4(b) — dual core}: sampling runs as a FreeRTOS task pinned to core 0 (\texttt{xTaskCreatePinnedToCore}); the summation stays in \texttt{loop()}, running on core 1.
-\item \textbf{4(c) — interrupt}: a hardware timer triggers an ISR every $100$ ms that only marks a timestamped flag; \texttt{loop()} processes the flag (reads the potentiometers and prints) and then runs the same blocking summation.
+\item \textbf{4(a) — busy loop}: everything (sampling and summation) happens inside \texttt{loop()}, on a single thread. Implemented for both boards.
+\item \textbf{4(b) — dual core}: sampling runs as a FreeRTOS task pinned to core 0 (\texttt{xTaskCreatePinnedToCore}); the summation stays in \texttt{loop()}, running on core 1. ESP32-WROOM only.
+\item \textbf{4(c) — interrupt}: a hardware timer triggers an ISR every $100$ ms that only marks a timestamped flag; \texttt{loop()} processes the flag (reads the potentiometers and prints) and then runs the same blocking summation. Implemented for both boards (ESP32's \texttt{timerBegin}/\texttt{timerAlarmWrite} API vs. the Uno's \texttt{Timer1} in CTC mode).
 \end{enumerate}
 
-The three sketches were flashed on a real ESP32-WROOM board and their serial output was captured directly with the Arduino IDE's Serial Monitor at $115200$ baud, for each of the three values of $N$. The full captures (eight samples per sketch/$N$ combination) are in \texttt{firmware/real\_logs/*.txt}.
+The three ESP32 sketches were flashed on a real ESP32-WROOM board and their serial output was captured directly with the Arduino IDE's Serial Monitor at $115200$ baud, for each of the three values of $N$. The full captures (eight samples per sketch/$N$ combination) are in \texttt{firmware/real\_logs/*.txt}.
+
+No physical Arduino Uno was available for this project — only the ESP32-WROOM used above, which is a different microcontroller (32-bit Xtensa, dual-core) and cannot run the Uno-specific sketches as written: \texttt{arduino\_uno\_a\_busy\_loop.ino} and \texttt{arduino\_uno\_c\_interrupt.ino} use ATmega328P hardware registers (\texttt{TCCR1A}, \texttt{TCCR1B}, \texttt{OCR1A}, \texttt{TIMSK1}, \texttt{ISR(TIMER1\_COMPA\_vect)}) that do not exist on the ESP32 and would fail to compile for it. The two sketches are written and ready to flash on a real Uno, but the Uno results reported here instead come from \texttt{firmware/simulate\_arduino\_uno\_serial\_output.py}, an explicitly documented timing model (an assumed $\sim\!800\,000$ additions/second on the ATmega328P, a $100.03$ ms \texttt{Timer1} CTC period, $\pm 1$ ms ISR jitter) rather than a hardware capture. The modeled logs, headed \texttt{\# SIMULATED}, are in \texttt{firmware/simulated\_logs\_arduino\_uno/*.txt}.

@@ -6,6 +6,7 @@ ruvector.db
 
 # Claude Code project instructions
 CLAUDE.md
+.mcp.json
 
 # Node
 node_modules/

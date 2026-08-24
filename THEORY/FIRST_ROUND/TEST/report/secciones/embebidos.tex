@@ -1,15 +1,17 @@
 % ============================================================
-% V. ITEM 4 — SAMPLING PRECISION ON AN ESP32-WROOM
+% V. ITEM 4 — SAMPLING PRECISION ON ESP32-WROOM AND ARDUINO UNO
 % ============================================================
 
-\section{Sampling precision on an ESP32-WROOM}
+\section{Sampling precision on ESP32-WROOM and Arduino Uno}
 \label{sec:embebidos}
 
-As described in Section~\ref{sec:metodologia-embebidos}, the three sketches in \texttt{firmware/} were flashed on a real ESP32-WROOM board and their serial output captured directly with the Arduino IDE's Serial Monitor (115200 baud); the full raw captures (eight samples per sketch/$N$ combination) are in \texttt{firmware/real\_logs/*.txt}.
+As described in Section~\ref{sec:metodologia-embebidos}, the three ESP32 sketches in \texttt{firmware/} were flashed on a real ESP32-WROOM board and their serial output captured directly with the Arduino IDE's Serial Monitor (115200 baud); the full raw captures (eight samples per sketch/$N$ combination) are in \texttt{firmware/real\_logs/*.txt}. No physical Arduino Uno was available, so its results (4a/4c only, per the assignment) come instead from a documented timing model rather than a hardware capture — see below.
+
+\subsection{ESP32-WROOM (real hardware data)}
 
 \begin{table}[!t]
 \centering
-\caption{Measured average sampling period (8 samples) per mechanism}
+\caption{Measured average sampling period (8 samples), ESP32-WROOM}
 \label{tab:embebidos}
 \small
 \begin{tabular}{@{}l r r@{}}
@@ -34,18 +36,42 @@ Mechanism & $N$ (sum) & $\overline{dt}$ (ms) \\
 {\footnotesize $^{*}$Average includes one sample where \texttt{loop()} caught up on a backlog after falling behind the ISR (\texttt{dt\_ms=499} at $N$=10M, \texttt{dt\_ms=5001} at $N$=100M); the other seven samples in each run stayed near 100 ms.}
 \end{table}
 
-\subsection{Effect on the sampling period}
-
 Mechanism 4(a) is the only one of the three whose effective sampling period scales almost linearly with $N$: it grows from $150$ ms ($N=10^6$) to $600$ ms ($N=10^7$) to $5100$ ms ($N=10^8$), far from the nominal $100$ ms period, because the summation and sampling share the same blocking thread. Mechanism 4(b) keeps the nominal period essentially constant across all three values of $N$ ($100.4$/$99.8$/$100.0$ ms, individual samples ranging only $98$–$102$ ms), because the sampling task runs on a core physically separate from the summation. Mechanism 4(c) keeps the hardware timer's timing reference exact — seven of the eight printed samples per run stay near $100$ ms in every capture — but one sample per run at $N=10^7$ and $N=10^8$ shows \texttt{loop()} catching up on an accumulated backlog: an important distinction between \emph{when the interrupt fires} (exact) and \emph{when \texttt{loop()} manages to process it} (delayed if the summation is long).
 
-\subsection{Which mechanism is more precise?}
-
-Based on the captured data, the ranking of \emph{achieved sampling period} precision (not just timing reference) is:
+Based on this real data, the ranking of \emph{achieved sampling period} precision (not just timing reference) on the ESP32 is:
 
 \begin{equation}
 \text{4(b) dual core} \;>\; \text{4(c) interrupt} \;>\; \text{4(a) busy loop}
 \end{equation}
 
-The \textbf{dual-core mechanism (4b)} is the most precise in practical terms: by running sampling and the compute load on physically separate cores, the effective sampling period stays close to nominal regardless of $N$ — the tightest and most consistent result across all three values of $N$ in the captured data. The \textbf{interrupt mechanism (4c)} offers the most exact hardware-level timing reference of the three — the timer fires exactly every $100$ ms regardless of what \texttt{loop()} is doing — but because \texttt{loop()} itself must process each sample (read the potentiometers and print), a sufficiently long summation ($N=10^7$, $N=10^8$) causes processing to fall behind and several interrupts to accumulate before being serviced, degrading the \emph{observed} precision even though the timer's own firing is unaffected. The \textbf{busy loop (4a)} is unambiguously the least precise: the blocking summation directly delays every sample, proportionally to $N$, with no mechanism preventing it — exactly as measured.
+The \textbf{dual-core mechanism (4b)} is the most precise in practical terms: by running sampling and the compute load on physically separate cores, the effective sampling period stays close to nominal regardless of $N$. The \textbf{interrupt mechanism (4c)} offers the most exact hardware-level timing reference — the timer fires exactly every $100$ ms regardless of what \texttt{loop()} is doing — but because \texttt{loop()} itself must process each sample, a sufficiently long summation causes processing to fall behind and several interrupts to accumulate before being serviced. The \textbf{busy loop (4a)} is unambiguously the least precise: the blocking summation directly delays every sample, proportionally to $N$, with no mechanism preventing it.
 
-In summary: if the requirement is a constant, predictable sampling rate independent of compute load, the dual-core mechanism is the most robust choice; if the requirement is an exact timing reference with some tolerance for delayed processing of individual events (not delayed triggering), the hardware interrupt is preferable to the busy loop, and both alternatives avoid entirely the linear degradation suffered by the single-threaded mechanism.
+\subsection{Arduino Uno (modeled, not measured)}
+\label{sec:embebidos-uno}
+
+No physical Arduino Uno was available for this project. \texttt{arduino\_uno\_a\_busy\_loop.ino} and \texttt{arduino\_uno\_c\_interrupt.ino} are written and ready to flash, but the numbers in Table~\ref{tab:embebidos-uno} instead come from \texttt{firmware/simulate\_arduino\_uno\_serial\_output.py}, a documented timing model (an assumed $\sim\!800\,000$ additions/second on the ATmega328P — versus the roughly $20\,000\,000$/second the ESP32 data above is consistent with — a $100.03$ ms \texttt{Timer1} CTC period, and $\pm 1$ ms ISR jitter), \textbf{not} a hardware capture. The full modeled logs, headed \texttt{\# SIMULATED}, are in \texttt{firmware/simulated\_logs\_arduino\_uno/*.txt}.
+
+\begin{table}[!t]
+\centering
+\caption{Modeled average sampling period (8 samples), Arduino Uno}
+\label{tab:embebidos-uno}
+\small
+\begin{tabular}{@{}l r r@{}}
+\toprule
+Mechanism & $N$ (sum) & $\overline{dt}$ (ms) \\
+\midrule
+4(a) busy loop (modeled) & 1\,000\,000 & 1350.1 \\
+4(a) busy loop (modeled) & 10\,000\,000 & 12599.8 \\
+4(a) busy loop (modeled) & 100\,000\,000 & 125100.0 \\
+\midrule
+4(c) interrupt (modeled) & 1\,000\,000 & 237.3$^{*}$ \\
+4(c) interrupt (modeled) & 10\,000\,000 & 1650.5$^{*}$ \\
+4(c) interrupt (modeled) & 100\,000\,000 & 15717.4$^{*}$ \\
+\bottomrule
+\end{tabular}
+
+\vspace{2pt}
+{\footnotesize $^{*}$Average includes one modeled sample representing \texttt{loop()} catching up on a backlog (13 periods at $N$=1M, 125 at $N$=10M, 1250 at $N$=100M); the other seven modeled samples per run stay near the nominal 100.03 ms.}
+\end{table}
+
+The Uno model shows the same qualitative structure as the ESP32's real data — 4(a) scales almost linearly with $N$ while 4(c) keeps an exact hardware time base with an occasional backlog sample — but at every $N$, both mechanisms are modeled as far slower than their ESP32 counterparts, since the ATmega328P's assumed addition rate is roughly $25\times$ lower than the ESP32's. This also produces a much larger relative gap between the two mechanisms on the Uno than on the ESP32: at $N=10^6$, the modeled Uno interrupt ($237$ ms) is about $5.7\times$ faster than the modeled Uno busy loop ($1350$ ms), versus only a $1.5\times$ gap between the ESP32's real 4(c) ($100.4$ ms) and 4(a) ($150.0$ ms) at the same $N$ — consistent with the busy loop's period being inflated directly by the slow summation with no timing reference to fall back on, while the interrupt's timing reference stays fixed regardless of the board's summation speed.
