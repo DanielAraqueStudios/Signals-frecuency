@@ -36,6 +36,74 @@ Mechanism & $N$ (sum) & $\overline{dt}$ (ms) \\
 {\footnotesize $^{*}$Average includes one sample where \texttt{loop()} caught up on a backlog after falling behind the ISR (\texttt{dt\_ms=499} at $N$=10M, \texttt{dt\_ms=5001} at $N$=100M); the other seven samples in each run stayed near 100 ms.}
 \end{table}
 
+Tables~\ref{tab:esp32-a}, \ref{tab:esp32-b}, and \ref{tab:esp32-c} reproduce every individual sample from the raw captures in \texttt{firmware/real\_logs/*.txt}, so the averages above can be traced back to the exact measured values.
+
+\begin{table}[!t]
+\centering
+\caption{ESP32 4(a) busy loop — $dt$ (ms) per sample}
+\label{tab:esp32-a}
+\small
+\begin{tabular}{@{}c r r r@{}}
+\toprule
+Sample & $N$=1M & $N$=10M & $N$=100M \\
+\midrule
+1 & 151 & 601 & 5100 \\
+2 & 149 & 600 & 5100 \\
+3 & 150 & 599 & 5101 \\
+4 & 151 & 600 & 5100 \\
+5 & 150 & 600 & 5101 \\
+6 & 149 & 601 & 5101 \\
+7 & 150 & 600 & 5100 \\
+8 & 150 & 600 & 5100 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\centering
+\caption{ESP32 4(b) dual core — $dt$ (ms) per sample}
+\label{tab:esp32-b}
+\small
+\begin{tabular}{@{}c r r r@{}}
+\toprule
+Sample & $N$=1M & $N$=10M & $N$=100M \\
+\midrule
+1 & 101 & 100 & 99 \\
+2 & 101 & 101 & 101 \\
+3 & 102 & 98 & 101 \\
+4 & 102 & 98 & 101 \\
+5 & 99 & 102 & 100 \\
+6 & 98 & 100 & 100 \\
+7 & 98 & 100 & 99 \\
+8 & 102 & 99 & 99 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\centering
+\caption{ESP32 4(c) interrupt — $dt$ (ms) per sample}
+\label{tab:esp32-c}
+\small
+\begin{tabular}{@{}c r r r@{}}
+\toprule
+Sample & $N$=1M & $N$=10M & $N$=100M \\
+\midrule
+1 & 101 & 100 & 100 \\
+2 & 100 & 101 & 101 \\
+3 & 101 & 100 & 100 \\
+4 & 100 & 499$^{*}$ & 5001$^{*}$ \\
+5 & 100 & 101 & 99 \\
+6 & 100 & 100 & 100 \\
+7 & 101 & 100 & 100 \\
+8 & 100 & 99 & 101 \\
+\bottomrule
+\end{tabular}
+
+\vspace{2pt}
+{\footnotesize $^{*}$\texttt{loop()} catching up on the ISR backlog, see text.}
+\end{table}
+
 Mechanism 4(a) is the only one of the three whose effective sampling period scales almost linearly with $N$: it grows from $150$ ms ($N=10^6$) to $600$ ms ($N=10^7$) to $5100$ ms ($N=10^8$), far from the nominal $100$ ms period, because the summation and sampling share the same blocking thread. Mechanism 4(b) keeps the nominal period essentially constant across all three values of $N$ ($100.4$/$99.8$/$100.0$ ms, individual samples ranging only $98$–$102$ ms), because the sampling task runs on a core physically separate from the summation. Mechanism 4(c) keeps the hardware timer's timing reference exact — seven of the eight printed samples per run stay near $100$ ms in every capture — but one sample per run at $N=10^7$ and $N=10^8$ shows \texttt{loop()} catching up on an accumulated backlog: an important distinction between \emph{when the interrupt fires} (exact) and \emph{when \texttt{loop()} manages to process it} (delayed if the summation is long).
 
 Based on this real data, the ranking of \emph{achieved sampling period} precision (not just timing reference) on the ESP32 is:
@@ -72,6 +140,53 @@ Mechanism & $N$ (sum) & $\overline{dt}$ (ms) \\
 
 \vspace{2pt}
 {\footnotesize $^{*}$Average includes one modeled sample representing \texttt{loop()} catching up on a backlog (13 periods at $N$=1M, 125 at $N$=10M, 1250 at $N$=100M); the other seven modeled samples per run stay near the nominal 100.03 ms.}
+\end{table}
+
+Tables~\ref{tab:uno-a} and \ref{tab:uno-c} reproduce every individual modeled sample from \texttt{firmware/simulated\_logs\_arduino\_uno/*.txt}.
+
+\begin{table}[!t]
+\centering
+\caption{Arduino Uno 4(a) busy loop (modeled) — $dt$ (ms) per sample}
+\label{tab:uno-a}
+\small
+\begin{tabular}{@{}c r r r@{}}
+\toprule
+Sample & $N$=1M & $N$=10M & $N$=100M \\
+\midrule
+1 & 1349.7 & 12599.2 & 125099.9 \\
+2 & 1349.2 & 12600.1 & 125100.4 \\
+3 & 1350.8 & 12600.0 & 125100.7 \\
+4 & 1349.9 & 12600.2 & 125099.2 \\
+5 & 1350.1 & 12599.5 & 125100.5 \\
+6 & 1350.3 & 12600.2 & 125099.7 \\
+7 & 1351.0 & 12599.6 & 125099.5 \\
+8 & 1349.9 & 12599.4 & 125099.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\centering
+\caption{Arduino Uno 4(c) interrupt (modeled) — $dt$ (ms) per sample}
+\label{tab:uno-c}
+\small
+\begin{tabular}{@{}c r r r@{}}
+\toprule
+Sample & $N$=1M & $N$=10M & $N$=100M \\
+\midrule
+1 & 99.9 & 100.3 & 100.5 \\
+2 & 100.8 & 101.0 & 100.1 \\
+3 & 100.4 & 99.7 & 100.4 \\
+4 & 1198.7$^{*}$ & 12504.0$^{*}$ & 125038.3$^{*}$ \\
+5 & 99.1 & 99.2 & 99.7 \\
+6 & 99.0 & 100.3 & 100.3 \\
+7 & 100.9 & 99.3 & 100.5 \\
+8 & 99.8 & 100.0 & 99.7 \\
+\bottomrule
+\end{tabular}
+
+\vspace{2pt}
+{\footnotesize $^{*}$Modeled \texttt{loop()} backlog catch-up sample, see text.}
 \end{table}
 
 The Uno model shows the same qualitative structure as the ESP32's real data — 4(a) scales almost linearly with $N$ while 4(c) keeps an exact hardware time base with an occasional backlog sample — but at every $N$, both mechanisms are modeled as far slower than their ESP32 counterparts, since the ATmega328P's assumed addition rate is roughly $25\times$ lower than the ESP32's. This also produces a much larger relative gap between the two mechanisms on the Uno than on the ESP32: at $N=10^6$, the modeled Uno interrupt ($237$ ms) is about $5.7\times$ faster than the modeled Uno busy loop ($1350$ ms), versus only a $1.5\times$ gap between the ESP32's real 4(c) ($100.4$ ms) and 4(a) ($150.0$ ms) at the same $N$ — consistent with the busy loop's period being inflated directly by the slow summation with no timing reference to fall back on, while the interrupt's timing reference stays fixed regardless of the board's summation speed.
