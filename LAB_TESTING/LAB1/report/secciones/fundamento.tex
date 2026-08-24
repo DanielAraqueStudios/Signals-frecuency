@@ -1,0 +1,60 @@
+% ============================================================
+% II. FUNDAMENTO TEÓRICO
+% ============================================================
+
+\section{Fundamento teórico}
+
+\subsection{Muestreo y frecuencia normalizada}
+\label{sec:muestreo}
+
+Una señal analógica $x(t)$ se convierte en una secuencia discreta mediante el muestreo periódico \cite{oppenheim}:
+
+\begin{equation}
+x[n] = x(nT_s), \qquad T_s = \frac{1}{f_s}
+\end{equation}
+
+La \textbf{frecuencia normalizada} de una componente de frecuencia $f$ dentro de una señal muestreada a $f_s$ se define como:
+
+\begin{equation}
+f_{\text{norm}} = \frac{f}{f_s} \quad \text{(ciclos/muestra)}
+\label{eq:norm}
+\end{equation}
+
+y equivale al número de ciclos que dicha componente completa entre una muestra y la siguiente. De forma equivalente, el número de \textbf{muestras por ciclo} es el recíproco de la Ec.~\ref{eq:norm}: $N_{\text{muestras/ciclo}} = f_s/f$.
+
+\subsection{Teorema de muestreo y aliasing}
+
+El teorema de Nyquist establece que una señal se puede reconstruir sin ambigüedad únicamente si:
+
+\begin{equation}
+f_s \geq 2 f_{\max}
+\end{equation}
+
+Cuando esta condición no se cumple, ocurre \textbf{aliasing}: una componente de frecuencia $f > f_s/2$ se manifiesta en la señal muestreada como una componente de frecuencia \emph{aparente} distinta, obtenida al ``plegar'' $f$ hacia el intervalo $[0, f_s/2]$ mediante reflexiones sucesivas alrededor de los múltiplos de $f_s/2$:
+
+\begin{equation}
+f_{\text{aliased}} = \left| f - k f_s \right|, \quad k = \text{round}(f/f_s)
+\label{eq:aliasing}
+\end{equation}
+
+para el $k$ entero que deja $f_{\text{aliased}} \in [0, f_s/2]$. Esta es la relación que implementa \texttt{matlab/analyze\_aliasing.m} para calcular la frecuencia normalizada teórica de la sección opcional de esta práctica.
+
+\subsection{Cuantización}
+
+La cuantización aproxima cada muestra continua en amplitud a uno de $2^b$ niveles discretos, donde $b$ es la resolución del convertidor —$12$ bits en este sistema, es decir $4096$ niveles—. El error de cuantización máximo es de medio nivel de cuantización (LSB/2), y su magnitud absoluta depende del rango de referencia del convertidor: para un ADC de $12$ bits con referencia de $3.3$ V, un LSB equivale a $3.3/4095 \approx 0.8$ mV.
+
+\subsection{Transformada Rápida de Fourier}
+
+La FFT calcula eficientemente la Transformada Discreta de Fourier \cite{lyons}, permitiendo identificar el contenido frecuencial de una señal ya muestreada. La componente en $0$ Hz del espectro corresponde al nivel de continua (DC) de la señal —su valor medio—, y su magnitud es directamente proporcional a la amplitud de dicho nivel DC. El pico correspondiente a una componente sinusoidal de frecuencia $f$ y amplitud $A$ aparece en la posición $f$ del espectro con una magnitud proporcional a $A$; con la normalización $2/N$ empleada en \texttt{matlab/analyze\_periodic\_signal.m} (multiplicar el espectro de un solo lado por $2$ y dividir por el número de muestras $N$), la magnitud del pico converge directamente al valor de $A$ para una señal sinusoidal pura sin ventaneo.
+
+\subsection{Reconstrucción: DAC vs. PWM + filtro pasa-bajos}
+\label{sec:reconstruccion}
+
+La reconstrucción de una señal analógica a partir de sus muestras digitales puede realizarse mediante:
+
+\begin{itemize}
+\item \textbf{Conversión Digital-Análoga (DAC) directa}: cada muestra se convierte inmediatamente a un nivel de voltaje sostenido hasta la siguiente muestra (retenedor de orden cero, \emph{zero-order hold}). La salida resultante es una función escalonada cuyo número de escalones por ciclo es idéntico al número de muestras por ciclo capturadas —la misma cantidad calculada en la Sección~\ref{sec:muestreo}—, ya que cada muestra produce exactamente un escalón.
+\item \textbf{PWM seguido de un filtro pasa-bajos analógico}: el valor de cada muestra se codifica como el ciclo útil (\emph{duty cycle}) de una señal PWM de alta frecuencia (aquí, $5$ kHz, diez veces la frecuencia de muestreo). El filtro pasa-bajos promedia esa señal de alta frecuencia, recuperando el valor medio de cada ciclo útil como un nivel de voltaje continuo por muestra —efectivamente un DAC construido con un promediador RC/activo en lugar de un convertidor dedicado.
+\end{itemize}
+
+Ambos métodos introducen un \textbf{desfase} (retardo) entre la señal original y la reconstruida, pero de naturaleza distinta: el DAC directo introduce principalmente el retardo de procesamiento discreto (el tiempo entre la captura de una muestra y su escritura en el DAC, del orden de microsegundos, y el propio retenedor de orden cero, que introduce medio periodo de muestreo de retardo de grupo en promedio); el filtro pasa-bajos del método PWM añade, además, su propio retardo de grupo, dependiente de su orden y frecuencia de corte, que típicamente domina sobre el retardo del retenedor de orden cero y por tanto no es igual al desfase del método DAC. Ninguno de los dos desfases es necesariamente constante con la frecuencia de la señal de entrada si el filtro no tiene fase lineal en la banda de interés —una característica de diseño de filtro, no del método de reconstrucción en sí.

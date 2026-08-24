@@ -1,0 +1,141 @@
+% ============================================================
+% IV. RESULTADOS
+% ============================================================
+
+\section{Resultados}
+\label{sec:resultados}
+
+\textbf{Ningún resultado de esta sección proviene de hardware real}: no se dispuso de tarjeta STM32, osciloscopio, generador de señales, IMU ni encoder/motorreductor en el entorno de desarrollo de este informe. Las columnas calculables desde la teoría del muestreo (frecuencia normalizada calculada, muestras por ciclo teóricas) se completan a continuación; las columnas que requieren una captura real (frecuencia normalizada \emph{observada}, amplitudes/frecuencias reconstruidas, estadística de sensores reales) se marcan como \emph{pendiente} y deben completarse ejecutando \texttt{matlab/*.m} sobre los CSV generados por \texttt{pc\_logger/serial\_logger.py} una vez el hardware esté disponible.
+
+\subsection{Digitalización de señales periódicas}
+
+\begin{table}[!t]
+\centering
+\caption{Frecuencia normalizada — señal periódica ($f_s = 500$ Hz)}
+\label{tab:periodica}
+\small
+\begin{tabular}{@{}r r r r r@{}}
+\toprule
+$f$ (Hz) & Muestras/ciclo & $f_{\text{norm}}$ calc. & $f_{\text{norm}}$ obs. & Diferencia \\
+\midrule
+50 & 10 & $1/10 = 0.100$ & pendiente & pendiente \\
+75 & 6.667 & $3/20 = 0.150$ & pendiente & pendiente \\
+100 & 5 & $1/5 = 0.200$ & pendiente & pendiente \\
+125 & 4 & $1/4 = 0.250$ & pendiente & pendiente \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Las columnas de muestras/ciclo y frecuencia normalizada calculada de la Tabla~\ref{tab:periodica} se obtienen directamente de $f_s/f$ y $f/f_s$ (Ec.~\ref{eq:norm}), sin requerir captura alguna; nótese que $75$ Hz no produce un número entero de muestras por ciclo ($6.667$), a diferencia de $50$, $100$ y $125$ Hz, un punto retomado en la Discusión.
+
+\subsection{Reconstrucción de la señal digitalizada}
+
+\begin{table}[!t]
+\centering
+\caption{Comparación entrada vs. señales reconstruidas}
+\label{tab:reconstruccion}
+\small
+\begin{tabular}{@{}r r r r r r@{}}
+\toprule
+$f_{\text{in}}$ (Hz) & $A_{\text{in}}$ (V) & $f_{\text{DAC}}$ (Hz) & $A_{\text{DAC}}$ (V) & $f_{\text{PWM}}$ (Hz) & $A_{\text{PWM}}$ (V) \\
+\midrule
+50 & pendiente & pendiente & pendiente & pendiente & pendiente \\
+75 & pendiente & pendiente & pendiente & pendiente & pendiente \\
+100 & pendiente & pendiente & pendiente & pendiente & pendiente \\
+125 & pendiente & pendiente & pendiente & pendiente & pendiente \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Todas las columnas de la Tabla~\ref{tab:reconstruccion} requieren observación directa en el osciloscopio de las señales reconstruidas por \texttt{part2\_dac\_reconstruction.ino} y \texttt{part2\_pwm\_reconstruction.ino} (con su filtro externo), y quedan pendientes.
+
+\subsection{Digitalización de sensores — IMU}
+
+\begin{table}[!t]
+\centering
+\caption{Estadística IMU — sensor quieto}
+\label{tab:imu-quieto}
+\small
+\begin{tabular}{@{}l r r r r@{}}
+\toprule
+Canal & Media & Desv. est. & Nivel DC & Ancho de banda \\
+\midrule
+$a_x$ & pendiente & pendiente & pendiente & pendiente \\
+$a_y$ & pendiente & pendiente & pendiente & pendiente \\
+$a_z$ & pendiente & pendiente & pendiente & pendiente \\
+$g_x$ & pendiente & pendiente & pendiente & pendiente \\
+$g_y$ & pendiente & pendiente & pendiente & pendiente \\
+$g_z$ & pendiente & pendiente & pendiente & pendiente \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\centering
+\caption{Estadística IMU — sensor en movimiento}
+\label{tab:imu-movimiento}
+\small
+\begin{tabular}{@{}l r r r r@{}}
+\toprule
+Canal & Media & Desv. est. & Nivel DC & Ancho de banda \\
+\midrule
+$a_x$ & pendiente & pendiente & pendiente & pendiente \\
+$a_y$ & pendiente & pendiente & pendiente & pendiente \\
+$a_z$ & pendiente & pendiente & pendiente & pendiente \\
+$g_x$ & pendiente & pendiente & pendiente & pendiente \\
+$g_y$ & pendiente & pendiente & pendiente & pendiente \\
+$g_z$ & pendiente & pendiente & pendiente & pendiente \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Las Tablas~\ref{tab:imu-quieto} y \ref{tab:imu-movimiento} se completan ejecutando \texttt{matlab/analyze\_imu.m} sobre \texttt{data/imu\_still/*.csv} y \texttt{data/imu\_moving/*.csv} respectivamente, generados con \texttt{pc\_logger/serial\_logger.py --mode imu}.
+
+\subsection{Digitalización de sensores — encoder y motorreductor}
+
+\begin{table}[!t]
+\centering
+\caption{Velocidad angular vs. voltaje aplicado}
+\label{tab:encoder}
+\small
+\begin{tabular}{@{}r r r r@{}}
+\toprule
+$V$ (V) & $\bar{\omega}$ (rad/s) & Desv. est. & Ancho de banda \\
+\midrule
+3 & pendiente & pendiente & pendiente \\
+6 & pendiente & pendiente & pendiente \\
+9 & pendiente & pendiente & pendiente \\
+12 & pendiente & pendiente & pendiente \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Los voltajes de la Tabla~\ref{tab:encoder} son valores de referencia sugeridos, sujetos a la tensión nominal real del motorreductor disponible; se completan ejecutando \texttt{matlab/analyze\_encoder.m} sobre \texttt{data/encoder/*.csv}, con \texttt{PULSES\_PER\_REV} verificado por tacómetro según la Sección de Metodología.
+
+\subsection{Fenómeno de aliasing (opcional)}
+
+\begin{table}[!t]
+\centering
+\caption{Frecuencia normalizada — régimen de aliasing ($f_s = 500$ Hz)}
+\label{tab:aliasing}
+\small
+\begin{tabular}{@{}r r r r@{}}
+\toprule
+$f$ (Hz) & $f_{\text{norm}}$ calc. & $f_{\text{norm}}$ obs. & $f_{\text{reconstruida}}$ (Hz) \\
+\midrule
+250 & 0.500 & pendiente & pendiente \\
+500 & 0.000 & pendiente & pendiente \\
+550 & 0.100 & pendiente & pendiente \\
+575 & 0.150 & pendiente & pendiente \\
+950 & 0.100 & pendiente & pendiente \\
+1000 & 0.000 & pendiente & pendiente \\
+1050 & 0.100 & pendiente & pendiente \\
+1075 & 0.150 & pendiente & pendiente \\
+2000 & 0.000 & pendiente & pendiente \\
+2050 & 0.100 & pendiente & pendiente \\
+2075 & 0.150 & pendiente & pendiente \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La columna de frecuencia normalizada calculada de la Tabla~\ref{tab:aliasing} se obtiene de la Ec.~\ref{eq:aliasing} (plegado teórico alrededor de los múltiplos de $f_s/2 = 250$ Hz), sin requerir captura alguna. Nótese que $550$, $950$, $1050$, $2050$ Hz comparten la misma frecuencia normalizada calculada ($0.100$) que su contraparte de la Tabla~\ref{tab:periodica} no aliasada más cercana no aplica directamente, pero sí coinciden entre sí — el mismo patrón se repite para $575$/$1075$/$2075$ Hz (todas en $0.150$) y para $500$/$1000$/$2000$ Hz (todas en $0.000$, es decir, aparecen como nivel DC). Esta coincidencia es precisamente la firma del aliasing y se discute en la Sección~\ref{sec:discusion-aliasing}.

@@ -1,0 +1,11 @@
+% ============================================================
+% I. INTRODUCCIÓN
+% ============================================================
+
+\section{Introducción}
+
+La conversión de una señal física continua en una representación digital procesable es la base de todo sistema de adquisición de datos moderno. Este proceso involucra tres decisiones de diseño fundamentales: la frecuencia a la que se toman las muestras (muestreo), el número de niveles discretos con los que se representa cada muestra (cuantización), y el mecanismo mediante el cual esa representación digital puede recuperarse de vuelta a una señal analógica (reconstrucción). Cada una de estas decisiones introduce una fuente distinta de pérdida de información frente a la señal física original, y cada una es controlable una vez se comprende su mecanismo.
+
+Esta práctica desarrolla un sistema de digitalización completo sobre un microcontrolador de 32 bits, cubriendo las tres etapas mencionadas más un cuarto tema —el fenómeno de aliasing— que surge precisamente cuando la primera de esas decisiones, la frecuencia de muestreo, no se elige adecuadamente respecto al contenido frecuencial de la señal de entrada. El sistema implementado (\texttt{firmware/}) captura señales periódicas y de sensores mediante interrupciones de temporizador de alta precisión, las transmite eficientemente al computador mediante un protocolo binario compacto (\texttt{pc\_logger/}), y sus resultados se analizan estadística y frecuencialmente en MATLAB (\texttt{matlab/}).
+
+El objetivo es doble: por un lado, implementar y verificar en la práctica los mecanismos de muestreo, cuantización, transmisión eficiente de datos y reconstrucción de señales; por otro, caracterizar experimentalmente las fuentes reales de error de un sistema de digitalización —diferencia entre frecuencia normalizada calculada y observada, desfase entre una señal reconstruida y su original, ruido en sensores reales— en contraste con sus predicciones puramente teóricas.

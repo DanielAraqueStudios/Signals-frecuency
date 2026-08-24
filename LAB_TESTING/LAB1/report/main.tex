@@ -1,0 +1,99 @@
+% ============================================================
+% Digitalización de señales y aliasing (LAB1)
+%
+% Construido a partir de la implementación real del proyecto:
+%   - firmware/part1_digitization/         -> muestreo periódico, 500 Hz, ADC 12 bits
+%   - firmware/part2_dac_reconstruction/    -> reconstrucción vía DAC
+%   - firmware/part2_pwm_reconstruction/    -> reconstrucción vía PWM + filtro
+%   - firmware/part3_imu_sensor/            -> digitalización IMU (I2C), 200 Hz
+%   - firmware/part3_encoder_motor/         -> digitalización encoder/motor, 200 Hz
+%   - pc_logger/serial_logger.py            -> captura eficiente a CSV, sin graficar
+%   - matlab/*.m                            -> FFT, estadística, tablas de resultados
+%
+% Ningún hardware físico (tarjeta STM32, osciloscopio, generador de
+% señales, IMU, encoder/motoreductor) estuvo disponible en este entorno;
+% las tablas de resultados se marcan explícitamente como pendientes de
+% captura real en lugar de contener datos inventados.
+%
+% Para compilar: pdflatex main.tex (dos pasadas si se usa \ref/\eqref)
+% ============================================================
+
+\documentclass[conference]{IEEEtran}
+
+% ============================================================
+% PAQUETES
+% ============================================================
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+
+\usepackage{cite}
+\usepackage{url}
+
+\usepackage{xcolor}
+
+\graphicspath{{figuras/}}
+
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  frame=single,
+  columns=fullflexible
+}
+
+% ============================================================
+% INFORMACIÓN DEL DOCUMENTO
+% ============================================================
+
+\title{
+Digitalización de señales analógicas periódicas, señales de sensores, reconstrucción y aliasing sobre un microcontrolador de 32 bits
+}
+
+\author{
+\IEEEauthorblockN{Daniel García Araque}
+\IEEEauthorblockA{
+Programa de Ingeniería Mecatrónica\\
+Universidad Militar Nueva Granada\\
+Bogotá, Colombia\\
+Código 7004185\\
+est.daniel.garciaa@unimilitar.edu.co
+}
+\and
+\IEEEauthorblockN{Miguel Ángel Gordillo Mejía}
+\IEEEauthorblockA{
+Programa de Ingeniería Mecatrónica\\
+Universidad Militar Nueva Granada\\
+Bogotá, Colombia\\
+Código 7004909\\
+est.miguel.gordillo@unimilitar.edu.co
+}
+}
+
+% ============================================================
+% DOCUMENTO
+% ============================================================
+
+\begin{document}
+
+\maketitle
+
+\input{secciones/resumen}
+\input{secciones/introduccion}
+\input{secciones/fundamento}
+\input{secciones/metodologia}
+\input{secciones/resultados}
+\input{secciones/discusion}
+\input{secciones/conclusiones}
+\input{secciones/referencias}
+
+\end{document}

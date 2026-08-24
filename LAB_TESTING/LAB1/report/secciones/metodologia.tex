@@ -1,0 +1,34 @@
+% ============================================================
+% III. METODOLOGÍA
+% ============================================================
+
+\section{Metodología}
+
+El sistema se implementó sobre una tarjeta STM32 Nucleo-64 mediante el núcleo STM32duino, en cinco sketches independientes (\texttt{firmware/}), un programa de captura en Python (\texttt{pc\_logger/serial\_logger.py}) y cuatro scripts de análisis en MATLAB (\texttt{matlab/}). \textbf{Ningún componente de hardware} —tarjeta STM32, osciloscopio, generador de señales, IMU o encoder/motorreductor— estuvo disponible en el entorno de desarrollo de este informe; todo el código se escribió para compilar y ejecutarse tal como está, pero no ha sido flasheado ni probado en hardware real.
+
+\subsection{Digitalización de señales periódicas}
+
+\texttt{firmware/part1\_digitization/part1\_digitization.ino} configura una interrupción de temporizador de hardware (\texttt{HardwareTimer}, \texttt{TIM2}) cada $2$ ms ($500$ muestras/segundo). Cada interrupción alterna un pin de depuración (verificable con osciloscopio, para confirmar el periodo de $2$ ms con el error máximo del $5\,\%$ exigido) y captura una muestra del ADC configurado a $12$ bits. El código crudo se transmite al PC en una trama binaria de $3$ bytes por muestra; la conversión a voltios se realiza en el lado del PC (\texttt{pc\_logger}), manteniendo la rutina de interrupción lo más corta posible.
+
+\subsection{Transmisión eficiente de datos}
+
+Se descartó $9600$ bit/s por insuficiente: a $500$ muestras/s con tramas de $3$ bytes se requieren $1500$ B/s, cifra que ya excede la capacidad útil de esa velocidad ($\approx 960$ B/s tras bits de inicio/parada). Se emplearon $115200$ baudios para las partes 1 y 2 ($\approx 11520$ B/s, margen de $7.7\times$) y $230400$ baudios para el sensor IMU ($\approx 23040$ B/s, margen de $8.2\times$ sobre sus $2800$ B/s requeridos), justificación completa en \texttt{firmware/README.md}. \texttt{pc\_logger/serial\_logger.py} implementa la recepción: sincroniza mediante un byte distintivo por tipo de trama, decodifica los canales a unidades físicas, y escribe directamente a CSV en disco —sin visualización ni graficación en tiempo real, por requisito explícito de la guía—. La lógica de sincronización y decodificación se valida con $14$ pruebas unitarias (\texttt{pc\_logger/tests/test\_serial\_logger.py}) contra flujos de bytes sintéticos, dado que no se dispuso de un puerto serie real para probarla de extremo a extremo.
+
+\subsection{Reconstrucción de la señal digitalizada}
+
+Dos sketches implementan los dos métodos de reconstrucción exigidos, ambos concurrentes con la misma interrupción de $2$ ms de captura:
+
+\begin{itemize}
+\item \texttt{part2\_dac\_reconstruction.ino}: el código ADC capturado se escribe inmediatamente al DAC de la tarjeta, dentro de la misma rutina de interrupción.
+\item \texttt{part2\_pwm\_reconstruction.ino}: el código ADC se traduce a un ciclo útil PWM entre $1\,\%$ y $99\,\%$ (según lo recomendado en la guía), a una frecuencia PWM de $5$ kHz —simultáneamente diez veces la frecuencia de muestreo y superior al mínimo de $5$ kHz exigido—. La salida PWM requiere un filtro pasa-bajos analógico externo (no implementado en firmware) con ganancia $0$ dB en $500$ Hz y $\leq\!-20$ dB en $600$ Hz; dado que un filtro RC de un solo polo solo atenúa $-20$ dB/década, esta especificación exige un filtro activo de al menos segundo orden (por ejemplo, Sallen-Key), documentado como pendiente de diseño/construcción física.
+\end{itemize}
+
+\subsection{Digitalización de sensores}
+
+\texttt{part3\_imu\_sensor.ino} muestrea una IMU de seis canales (acelerómetro + giroscopio) por I2C a $200$ muestras/segundo, asumiendo el mapa de registros de una MPU-6050 (ajustable si se usa otro modelo). La conversión a unidades físicas (m/s$^2$, rad/s) usa las sensibilidades del fabricante para el rango de escala completa por defecto ($\pm 2$g, $\pm 250\,^{\circ}$/s), implementada en \texttt{pc\_logger/serial\_logger.py::imu\_decode}.
+
+\texttt{part3\_encoder\_motor.ino} implementa la estrategia de \emph{conteo de pulsos por intervalo} (opción 1 de la guía) sobre una ventana de $5$ ms, mediante una interrupción por flanco en el canal A del encoder y el signo determinado por el canal B. Esta estrategia se prefirió sobre la medición de tiempo entre pulsos porque es más robusta al rango de velocidades típico de un motorreductor con carga (velocidades moderadas y relativamente constantes), donde medir el tiempo entre pulsos individuales es más sensible al ruido de conmutación del encoder. El valor \texttt{PULSES\_PER\_REV} debe determinarse experimentalmente con un tacómetro antes de interpretar los resultados en unidades angulares, según lo exige la guía.
+
+\subsection{Análisis en MATLAB}
+
+Los cuatro scripts en \texttt{matlab/} leen los CSV producidos por \texttt{pc\_logger/serial\_logger.py} y calculan exactamente los valores solicitados en cada tabla de resultados de la Sección~\ref{sec:resultados}: muestras por ciclo y frecuencia normalizada calculada/observada (\texttt{analyze\_periodic\_signal.m}), estadística descriptiva y ancho de banda por canal IMU (\texttt{analyze\_imu.m}), estadística y ancho de banda de velocidad angular (\texttt{analyze\_encoder.m}), y frecuencia normalizada calculada (plegada, Ec.~\ref{eq:aliasing}) vs. observada para el análisis opcional de aliasing (\texttt{analyze\_aliasing.m}). Ninguno de los cuatro se ha ejecutado contra datos reales en este informe.

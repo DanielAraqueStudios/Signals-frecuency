@@ -29,7 +29,8 @@ folder with its own README, dependencies, and tests, grouped under a
       - [`WORK_TWO/`](THEORY/FIRST_ROUND/WORK/WORK_TWO/) — Fourier Square-Wave Sampling
       - [`WORK_THREE/`](THEORY/FIRST_ROUND/WORK/WORK_THREE/) — Sampling & Spectral Analysis Lab
     - [`TEST/`](THEORY/FIRST_ROUND/TEST/) — Sampling, Quantization, Audio FFT & Embedded Timing
-- `LAB_TESTING/` — reserved for upcoming lab work (empty, not yet tracked)
+- [`LAB_TESTING/`](LAB_TESTING/)
+  - [`LAB1/`](LAB_TESTING/LAB1/) — Digitalización de señales y aliasing (STM32)
 - [`Readme.md`](Readme.md) — this file, the repository index
 - [`.gitignore`](.gitignore)
 
@@ -96,6 +97,23 @@ serial-captured firmware timing.
 **Stack:** NumPy · SciPy · Matplotlib · pytest · LaTeX · Arduino/ESP32 (C++)
 **Entry points:** `python main.py` (items 1-3) · `firmware/` (item 4 sketches + logs) · `report/main.tex` (report)
 **Full docs:** [`readme.md`](THEORY/FIRST_ROUND/TEST/readme.md)
+
+### [`LAB_TESTING/LAB1/` — Digitalización de señales y aliasing](LAB_TESTING/LAB1/readme.md)
+
+A complete signal-digitization system for a 32-bit microcontroller (STM32
+Nucleo-64): periodic-signal sampling at 500 Hz (12-bit ADC, timer-ISR
+driven), two reconstruction methods (onboard DAC and PWM + external
+low-pass filter), sensor digitization (6-channel I2C IMU and an
+encoder/DC-motor, both at 200 Hz), and the optional aliasing exercise.
+Includes an efficient binary-framed PC-side logger (no live plotting, per
+the assignment) and MATLAB scripts for the FFT/statistics tables the lab
+guide requires. No physical hardware was available to build this, so the
+report's result tables are honestly marked pending real capture rather
+than fabricated.
+
+**Stack:** STM32duino (C++) · Python (`pyserial`) · pytest · MATLAB · LaTeX
+**Entry points:** `firmware/*/*.ino` (flash per stage) · `pc_logger/serial_logger.py` (capture) · `matlab/*.m` (analysis) · `report/main.tex` (report, en español)
+**Full docs:** [`readme.md`](LAB_TESTING/LAB1/readme.md)
 
 > More projects will be added here as new exercises are completed, each
 > following the same pattern: its own folder, its own README, linked above.
