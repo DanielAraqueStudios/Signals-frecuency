@@ -3,13 +3,17 @@
 > Part of the [`Signals-frecuency`](../../Readme.md) repository — see the
 > root README for the full project index.
 
-A complete signal-digitization system for a 32-bit microcontroller (STM32
-Nucleo-64), covering periodic-signal sampling, signal reconstruction (DAC
-and PWM + low-pass filter), sensor digitization (IMU + encoder/DC-motor),
-and the aliasing phenomenon — matching each stage of the university lab
-guide reproduced in `report/secciones/`.
+A complete signal-digitization system for a 32-bit microcontroller
+(ESP32-WROOM), covering periodic-signal sampling, signal reconstruction
+(DAC and PWM + low-pass filter), sensor digitization (IMU +
+encoder/DC-motor), and the aliasing phenomenon — matching each stage of
+the university lab guide reproduced in `report/secciones/`. The guide
+names an STM32 board specifically for the PWM reconstruction stage; this
+project targets ESP32 instead, since that's the board actually available
+— see `firmware/README.md` for the resulting hardware differences (most
+notably, the ESP32's DAC is 8-bit, not 12-bit).
 
-**No physical hardware was available** to build this (STM32 board,
+**No physical hardware was available** to build this (ESP32 board,
 oscilloscope, wave generator, IMU, encoder/motor): the firmware, PC-side
 logger, and MATLAB analysis scripts are complete and ready to run, but the
 report's result tables are honestly marked *pendiente* (pending) rather
@@ -21,7 +25,7 @@ than containing invented measurements. See `report/secciones/resultados.tex`.
 
 ```
 LAB1/
-├── firmware/                        STM32 sketches (STM32duino/Arduino core), one per stage
+├── firmware/                        ESP32-WROOM sketches (Arduino core for ESP32), one per stage
 │   ├── part1_digitization/           500 Hz timer-ISR sampling, 12-bit ADC
 │   ├── part2_dac_reconstruction/     Reconstruction via the onboard DAC
 │   ├── part2_pwm_reconstruction/     Reconstruction via 5 kHz PWM + external filter
@@ -56,7 +60,7 @@ LAB1/
 
 | Dependency | Purpose |
 |---|---|
-| Arduino IDE + STM32duino core | Compile/flash the `firmware/*/*.ino` sketches |
+| Arduino IDE + ESP32 board support | Compile/flash the `firmware/*/*.ino` sketches |
 | Python 3.9+, `pyserial` | `pc_logger/serial_logger.py` |
 | pytest | `pc_logger/tests/` |
 | MATLAB | `matlab/*.m` analysis scripts |
@@ -68,7 +72,7 @@ pip install pyserial pytest
 ## Usage (once hardware is available)
 
 ```bash
-# 1. Flash the relevant sketch from firmware/ onto the STM32 board.
+# 1. Flash the relevant sketch from firmware/ onto the ESP32 board.
 # 2. Capture data to CSV:
 cd pc_logger
 python serial_logger.py --mode adc     --port COM5 --baud 115200 --out ../data/periodic_signal/signal_50hz.csv

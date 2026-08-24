@@ -1,10 +1,12 @@
 /*
- * LAB1, Part 2 - Signal reconstruction via PWM + external low-pass filter.
+ * LAB1, Part 2 - Signal reconstruction via PWM + external low-pass filter
+ * (ESP32, using the LEDC peripheral instead of STM32 hardware timers).
  *
- * Same 2 ms capture ISR as the other part-2 sketch, but instead of the
- * onboard DAC, the captured code sets the duty cycle of a PWM output.
  * PWM_FREQUENCY_HZ = 5000 Hz satisfies the assignment's ">= 10x the 500 Hz
  * sample rate" and ">= 5 kHz" requirements simultaneously.
+ * PWM_RESOLUTION_BITS = 10 (1024 duty levels) comfortably fits the LEDC
+ * peripheral's clock budget at 5 kHz (5000 * 1024 = 5.12 MHz, well under
+ * the 80 MHz APB clock LEDC derives from).
  *
  * The PWM pin must be followed externally by an active low-pass filter
  * with ~0 dB gain at the 500 Hz sample rate and <= -20 dB by 600 Hz (100 Hz
@@ -15,8 +17,8 @@
  * a 500 Hz cutoff).
  *
  * Wiring:
- *   - ADC_PIN (A0 / PA0)   -> wave generator output.
- *   - PWM_PIN (D9 / PB10, or any STM32 timer-capable PWM pin)
+ *   - ADC_PIN (GPIO34)  -> wave generator output.
+ *   - PWM_PIN (GPIO26, any LEDC-capable GPIO)
  *     -> input of the external active low-pass filter -> oscilloscope
  *        channel 2 (filter output), compared against the generator on
  *        channel 1.
@@ -25,46 +27,60 @@
  * linearly interpolated, per the assignment's recommendation.
  */
 
-#include <HardwareTimer.h>
+const int ADC_PIN = 34;
+const int PWM_PIN = 26;
+const int PWM_CHANNEL = 0;
+const uint32_t SAMPLE_PERIOD_US = 2000;      // 2 ms -> 500 Hz sampling
+const uint32_t PWM_FREQUENCY_HZ = 5000;      // >= 10x sample rate, >= 5 kHz
+const int PWM_RESOLUTION_BITS = 10;          // 1024 duty levels
+const int ADC_MAX_CODE = 4095;               // 12-bit
 
-const int ADC_PIN = PA0;
-const int PWM_PIN = PB10;
-const uint32_t SAMPLE_PERIOD_US = 2000;   // 2 ms -> 500 Hz sampling
-const uint32_t PWM_FREQUENCY_HZ = 5000;   // >= 10x sample rate, >= 5 kHz
-const int ADC_MAX_CODE = 4095;            // 12-bit
+const float DUTY_MIN_FRAC = 0.01f;
+const float DUTY_MAX_FRAC = 0.99f;
 
-const float DUTY_MIN_PERCENT = 1.0f;
-const float DUTY_MAX_PERCENT = 99.0f;
+hw_timer_t *sampleTimer = NULL;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 
-HardwareTimer sampleTimer(TIM2);
-HardwareTimer pwmTimer(TIM3);
+volatile bool sampleReady = false;
+volatile uint16_t latestCode = 0;
 
-float codeToDutyPercent(uint16_t code) {
+uint32_t codeToDuty(uint16_t code) {
   float frac = (float)code / (float)ADC_MAX_CODE;
-  return DUTY_MIN_PERCENT + frac * (DUTY_MAX_PERCENT - DUTY_MIN_PERCENT);
+  float duty_frac = DUTY_MIN_FRAC + frac * (DUTY_MAX_FRAC - DUTY_MIN_FRAC);
+  return (uint32_t)(duty_frac * ((1 << PWM_RESOLUTION_BITS) - 1));
 }
 
-void onSampleTick() {
+void IRAM_ATTR onSampleTick() {
+  portENTER_CRITICAL_ISR(&timerMux);
   uint16_t code = analogRead(ADC_PIN);
-  pwmTimer.setCaptureCompare(1, codeToDutyPercent(code), PERCENT_COMPARE_FORMAT);
-
-  uint8_t frame[3] = {0xA5, (uint8_t)(code & 0xFF), (uint8_t)(code >> 8)};
-  Serial.write(frame, sizeof(frame));
+  ledcWrite(PWM_CHANNEL, codeToDuty(code));
+  latestCode = code;
+  sampleReady = true;
+  portEXIT_CRITICAL_ISR(&timerMux);
 }
 
 void setup() {
   analogReadResolution(12);
   Serial.begin(115200);
 
-  pinMode(PWM_PIN, OUTPUT);
-  pwmTimer.setMode(1, TIMER_OUTPUT_COMPARE_PWM1, PWM_PIN);
-  pwmTimer.setOverflow(PWM_FREQUENCY_HZ, HERTZ_FORMAT);
-  pwmTimer.setCaptureCompare(1, DUTY_MIN_PERCENT, PERCENT_COMPARE_FORMAT);
-  pwmTimer.resume();
+  ledcSetup(PWM_CHANNEL, PWM_FREQUENCY_HZ, PWM_RESOLUTION_BITS);
+  ledcAttachPin(PWM_PIN, PWM_CHANNEL);
+  ledcWrite(PWM_CHANNEL, codeToDuty(0));
 
-  sampleTimer.setOverflow(SAMPLE_PERIOD_US, MICROSEC_FORMAT);
-  sampleTimer.attachInterrupt(onSampleTick);
-  sampleTimer.resume();
+  sampleTimer = timerBegin(0, 80, true);
+  timerAttachInterrupt(sampleTimer, &onSampleTick, true);
+  timerAlarmWrite(sampleTimer, SAMPLE_PERIOD_US, true);
+  timerAlarmEnable(sampleTimer);
 }
 
-void loop() {}
+void loop() {
+  if (sampleReady) {
+    portENTER_CRITICAL(&timerMux);
+    uint16_t code = latestCode;
+    sampleReady = false;
+    portEXIT_CRITICAL(&timerMux);
+
+    uint8_t frame[3] = {0xA5, (uint8_t)(code & 0xFF), (uint8_t)(code >> 8)};
+    Serial.write(frame, sizeof(frame));
+  }
+}

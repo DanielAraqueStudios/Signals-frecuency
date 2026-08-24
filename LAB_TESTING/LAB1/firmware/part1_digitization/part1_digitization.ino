@@ -1,65 +1,80 @@
 /*
  * LAB1, Part 1 - Periodic analog signal digitization.
  *
- * Target: a 32-bit microcontroller board (written for STM32 Nucleo-64,
- * e.g. F401RE/F411RE, via the STM32duino "Arduino_Core_STM32" core; the
- * pin names below use Arduino-style Nucleo aliases and should be adjusted
- * if a different STM32 board is used).
+ * Target: ESP32-WROOM (32-bit Xtensa, dual core), via the Arduino core
+ * for ESP32. The lab guide names an STM32 board for the PWM
+ * reconstruction stage specifically (see part2_pwm_reconstruction.ino);
+ * this port targets ESP32 hardware throughout instead, per the actual
+ * board available for this project.
  *
- * - HardwareTimer interrupt every 2 ms (500 samples/s), <=5% jitter budget.
- * - Each interrupt: toggle DEBUG_PIN (scope-verifiable edge-to-edge timing)
- *   and read the ADC on ADC_PIN at 12-bit resolution.
- * - The raw 12-bit code is sent to the PC over Serial in a small binary
- *   frame; unit conversion (code -> volts) is done PC-side by
- *   pc_logger/serial_logger.py, using the documented ADC reference below.
+ * - Hardware timer interrupt every 2 ms (500 samples/s), <=5% jitter budget.
+ * - The ISR only toggles DEBUG_PIN (scope-verifiable edge-to-edge timing),
+ *   reads the 12-bit ADC, and stores the code + a ready flag. Serial I/O
+ *   is NOT done from the ISR itself (Serial.write is not guaranteed
+ *   interrupt-safe on ESP32); loop() checks the flag and sends the frame,
+ *   the same safe pattern used by esp32_c_interrupt.ino in
+ *   THEORY/FIRST_ROUND/TEST/firmware.
+ * - Unit conversion (code -> volts) is done PC-side by
+ *   pc_logger/serial_logger.py.
  *
  * Wiring:
- *   - DEBUG_PIN (D5 / PA5, Nucleo user LED pin) -> oscilloscope channel 1,
- *     to verify the 2 ms interrupt period.
- *   - ADC_PIN (A0 / PA0) -> wave generator output (sinusoid, 30-125 Hz for
- *     the main experiment; see part 1 of the report for the full
- *     frequency table) or a potentiometer wiper for preliminary testing.
- *   - ADC reference: board Vref+ (typically 3.3 V) -> ADC_REF_VOLTS below.
+ *   - DEBUG_PIN (GPIO5) -> oscilloscope channel 1, to verify the 2 ms
+ *     interrupt period.
+ *   - ADC_PIN (GPIO34, ADC1-only, usable even with WiFi active unlike
+ *     ADC2) -> wave generator output (sinusoid, 30-125 Hz for the main
+ *     experiment; see report/secciones/resultados.tex) or a
+ *     potentiometer wiper for preliminary testing.
+ *   - ADC reference: ~3.3 V (the ESP32 ADC has known non-linearity vs.
+ *     an ideal 12-bit converter, worth noting when comparing captured
+ *     voltages against the generator's configured amplitude).
  *
- * Frame format (3 bytes, little-endian):
+ * Frame format (3 bytes, little-endian) - unchanged from the STM32
+ * version, so pc_logger/serial_logger.py needs no changes:
  *   [0]      0xA5                     sync byte
  *   [1..2]   uint16_t raw_adc_code    0-4095 (12-bit)
  */
 
-#include <HardwareTimer.h>
-
-const int DEBUG_PIN = PA5;
-const int ADC_PIN = PA0;
+const int DEBUG_PIN = 5;
+const int ADC_PIN = 34;
 const uint32_t SAMPLE_PERIOD_US = 2000; // 2 ms -> 500 Hz
-const float ADC_REF_VOLTS = 3.3f;       // must match the board's actual Vref+
+const float ADC_REF_VOLTS = 3.3f;
 const int ADC_BITS = 12;
 
-HardwareTimer sampleTimer(TIM2);
+hw_timer_t *sampleTimer = NULL;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 
 volatile bool debugState = false;
+volatile bool sampleReady = false;
+volatile uint16_t latestCode = 0;
 
-void onSampleTick() {
+void IRAM_ATTR onSampleTick() {
+  portENTER_CRITICAL_ISR(&timerMux);
   debugState = !debugState;
   digitalWrite(DEBUG_PIN, debugState ? HIGH : LOW);
-
-  uint16_t code = analogRead(ADC_PIN); // 0-4095 with analogReadResolution(12)
-
-  uint8_t frame[3] = {0xA5, (uint8_t)(code & 0xFF), (uint8_t)(code >> 8)};
-  Serial.write(frame, sizeof(frame));
+  latestCode = analogRead(ADC_PIN); // 0-4095 with analogReadResolution(12)
+  sampleReady = true;
+  portEXIT_CRITICAL_ISR(&timerMux);
 }
 
 void setup() {
   pinMode(DEBUG_PIN, OUTPUT);
   analogReadResolution(ADC_BITS);
-  Serial.begin(115200); // see report/secciones/metodologia.tex for the byte-budget justification
+  Serial.begin(115200); // see firmware/README.md for the byte-budget justification
 
-  sampleTimer.setOverflow(SAMPLE_PERIOD_US, MICROSEC_FORMAT);
-  sampleTimer.attachInterrupt(onSampleTick);
-  sampleTimer.resume();
+  sampleTimer = timerBegin(0, 80, true);          // 80 MHz APB / 80 = 1 MHz -> 1 tick = 1 us
+  timerAttachInterrupt(sampleTimer, &onSampleTick, true);
+  timerAlarmWrite(sampleTimer, SAMPLE_PERIOD_US, true); // period in us, auto-reload
+  timerAlarmEnable(sampleTimer);
 }
 
 void loop() {
-  // All work happens in onSampleTick(); loop() is intentionally empty so
-  // nothing here can compete with the timer interrupt for the sampling
-  // period, unlike the busy-loop mechanism studied in THEORY/FIRST_ROUND/TEST.
+  if (sampleReady) {
+    portENTER_CRITICAL(&timerMux);
+    uint16_t code = latestCode;
+    sampleReady = false;
+    portEXIT_CRITICAL(&timerMux);
+
+    uint8_t frame[3] = {0xA5, (uint8_t)(code & 0xFF), (uint8_t)(code >> 8)};
+    Serial.write(frame, sizeof(frame));
+  }
 }

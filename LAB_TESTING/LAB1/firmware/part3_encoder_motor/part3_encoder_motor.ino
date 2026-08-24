@@ -1,5 +1,5 @@
 /*
- * LAB1, Part 3 - Encoder + DC gear-motor angular position/velocity.
+ * LAB1, Part 3 - Encoder + DC gear-motor angular position/velocity (ESP32).
  *
  * Strategy: pulse counting within a fixed 5 ms window (200 samples/s),
  * using a pin-change interrupt on the encoder's A channel to increment a
@@ -15,45 +15,46 @@
  * (verify with a tachometer per the assignment) before angle/velocity
  * values are meaningful; it is left as a placeholder below.
  *
- * Wiring: encoder channel A -> ENCODER_A_PIN (external interrupt-capable
- * pin), channel B -> ENCODER_B_PIN (used only for direction sign, not
- * counted here), motor driver PWM/direction pins -> MOTOR_* pins.
+ * Wiring: encoder channel A -> ENCODER_A_PIN (any GPIO usable with
+ * attachInterrupt), channel B -> ENCODER_B_PIN (used only for direction
+ * sign, not counted here), motor driver PWM/direction pins -> per the
+ * driver module's own datasheet.
  *
- * Frame format (5 bytes, little-endian):
+ * Frame format (5 bytes, little-endian) - unchanged from the STM32
+ * version:
  *   [0]     0xC5                sync byte
  *   [1..2]  int16_t pulse_count  signed pulses counted in the last 5 ms
  *   [3..4]  uint16_t reserved    0x0000
  */
 
-#include <HardwareTimer.h>
-
-const int ENCODER_A_PIN = PA1;
-const int ENCODER_B_PIN = PA2;
+const int ENCODER_A_PIN = 4;
+const int ENCODER_B_PIN = 16;
 const uint32_t SAMPLE_PERIOD_US = 5000; // 5 ms -> 200 Hz
 
 // TODO: set from the actual encoder's datasheet / tachometer-verified count.
 const int PULSES_PER_REV = 0;
 
-HardwareTimer sampleTimer(TIM2);
+hw_timer_t *sampleTimer = NULL;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 volatile int32_t pulseCount = 0;
 
-void countEncoderPulse() {
+volatile bool sampleReady = false;
+volatile int16_t latestSignedCount = 0;
+
+void IRAM_ATTR countEncoderPulse() {
   bool forward = digitalRead(ENCODER_B_PIN) == HIGH;
+  portENTER_CRITICAL_ISR(&timerMux);
   pulseCount += forward ? 1 : -1;
+  portEXIT_CRITICAL_ISR(&timerMux);
 }
 
-void onSampleTick() {
-  noInterrupts();
+void IRAM_ATTR onSampleTick() {
+  portENTER_CRITICAL_ISR(&timerMux);
   int32_t count = pulseCount;
   pulseCount = 0;
-  interrupts();
-
-  int16_t signedCount = (int16_t)count; // pulses in the last 5 ms window
-  uint8_t frame[5] = {
-      0xC5,
-      (uint8_t)(signedCount & 0xFF), (uint8_t)(signedCount >> 8),
-      0x00, 0x00};
-  Serial.write(frame, sizeof(frame));
+  latestSignedCount = (int16_t)count; // pulses in the last 5 ms window
+  sampleReady = true;
+  portEXIT_CRITICAL_ISR(&timerMux);
 }
 
 void setup() {
@@ -63,9 +64,23 @@ void setup() {
 
   Serial.begin(115200);
 
-  sampleTimer.setOverflow(SAMPLE_PERIOD_US, MICROSEC_FORMAT);
-  sampleTimer.attachInterrupt(onSampleTick);
-  sampleTimer.resume();
+  sampleTimer = timerBegin(0, 80, true);
+  timerAttachInterrupt(sampleTimer, &onSampleTick, true);
+  timerAlarmWrite(sampleTimer, SAMPLE_PERIOD_US, true);
+  timerAlarmEnable(sampleTimer);
 }
 
-void loop() {}
+void loop() {
+  if (sampleReady) {
+    portENTER_CRITICAL(&timerMux);
+    int16_t signedCount = latestSignedCount;
+    sampleReady = false;
+    portEXIT_CRITICAL(&timerMux);
+
+    uint8_t frame[5] = {
+        0xC5,
+        (uint8_t)(signedCount & 0xFF), (uint8_t)(signedCount >> 8),
+        0x00, 0x00};
+    Serial.write(frame, sizeof(frame));
+  }
+}

@@ -1,56 +1,75 @@
 /*
- * LAB1, Part 2 - Signal reconstruction via the onboard DAC.
+ * LAB1, Part 2 - Signal reconstruction via the onboard DAC (ESP32).
  *
- * Same 2 ms timer interrupt and ADC capture as part1_digitization, but the
- * captured 12-bit code is also immediately written back out through the
- * board's DAC, concurrently with the interrupt (both happen inside the
- * same ISR, so there is no extra latency between capture and
- * reconstruction beyond the DAC's own settling time).
+ * IMPORTANT DIFFERENCE FROM STM32: the ESP32's built-in DAC (GPIO25/26)
+ * is only 8-bit (0-255), not 12-bit like the STM32's. The ADC still
+ * captures at 12-bit resolution (0-4095) as required, but the
+ * reconstructed DAC output necessarily has coarser amplitude resolution
+ * than the capture - the 12-bit code is scaled down to 8 bits
+ * (code >> 4) before being written out. This is a genuine hardware
+ * limitation of the ESP32 vs. the STM32 the guide names, not a firmware
+ * choice, and should be noted when comparing the reconstructed waveform's
+ * fine detail against the DAC-reconstruction theory in
+ * report/secciones/fundamento.tex.
+ *
+ * Same safe ISR pattern as part1_digitization.ino: the timer ISR only
+ * captures + writes the DAC (both are quick register operations); Serial
+ * transmission of the raw code happens in loop().
  *
  * Wiring:
- *   - ADC_PIN (A0 / PA0)  -> wave generator output (the signal to digitize).
- *   - DAC_PIN (A2 / PA4, the STM32's true DAC-capable pin on most Nucleo-64
- *     boards) -> oscilloscope channel 2, to compare against the generator's
- *     signal on channel 1.
- *   - DEBUG_PIN (D5 / PA5) -> oscilloscope channel 3 (optional), same
- *     2 ms timing-verification edge as part 1.
- *
- * The DAC on STM32 is typically 12-bit as well, so the ADC code can be
- * written back with no rescaling (DAC_PIN expects 0-4095 when
- * analogWriteResolution(12) is set).
+ *   - ADC_PIN (GPIO34)  -> wave generator output (the signal to digitize).
+ *   - DAC_PIN (GPIO25, one of the ESP32's two true DAC pins)
+ *     -> oscilloscope channel 2, to compare against the generator's
+ *        signal on channel 1.
+ *   - DEBUG_PIN (GPIO5) -> oscilloscope channel 3 (optional), same 2 ms
+ *     timing-verification edge as part 1.
  */
 
-#include <HardwareTimer.h>
-
-const int DEBUG_PIN = PA5;
-const int ADC_PIN = PA0;
-const int DAC_PIN = PA4;
+const int DEBUG_PIN = 5;
+const int ADC_PIN = 34;
+const int DAC_PIN = 25;
 const uint32_t SAMPLE_PERIOD_US = 2000; // 2 ms -> 500 Hz
-const int RESOLUTION_BITS = 12;
+const int ADC_BITS = 12;
 
-HardwareTimer sampleTimer(TIM2);
+hw_timer_t *sampleTimer = NULL;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+
 volatile bool debugState = false;
+volatile bool sampleReady = false;
+volatile uint16_t latestCode = 0;
 
-void onSampleTick() {
+void IRAM_ATTR onSampleTick() {
+  portENTER_CRITICAL_ISR(&timerMux);
   debugState = !debugState;
   digitalWrite(DEBUG_PIN, debugState ? HIGH : LOW);
 
-  uint16_t code = analogRead(ADC_PIN);   // capture
-  analogWrite(DAC_PIN, code);            // reconstruct, same ISR
+  uint16_t code = analogRead(ADC_PIN);   // 12-bit capture, 0-4095
+  dacWrite(DAC_PIN, code >> 4);          // reconstruct at the DAC's native 8 bits, same ISR
 
-  uint8_t frame[3] = {0xA5, (uint8_t)(code & 0xFF), (uint8_t)(code >> 8)};
-  Serial.write(frame, sizeof(frame));
+  latestCode = code; // full 12-bit code still sent to the PC, for a fair comparison
+  sampleReady = true;
+  portEXIT_CRITICAL_ISR(&timerMux);
 }
 
 void setup() {
   pinMode(DEBUG_PIN, OUTPUT);
-  analogReadResolution(RESOLUTION_BITS);
-  analogWriteResolution(RESOLUTION_BITS);
+  analogReadResolution(ADC_BITS);
   Serial.begin(115200);
 
-  sampleTimer.setOverflow(SAMPLE_PERIOD_US, MICROSEC_FORMAT);
-  sampleTimer.attachInterrupt(onSampleTick);
-  sampleTimer.resume();
+  sampleTimer = timerBegin(0, 80, true);
+  timerAttachInterrupt(sampleTimer, &onSampleTick, true);
+  timerAlarmWrite(sampleTimer, SAMPLE_PERIOD_US, true);
+  timerAlarmEnable(sampleTimer);
 }
 
-void loop() {}
+void loop() {
+  if (sampleReady) {
+    portENTER_CRITICAL(&timerMux);
+    uint16_t code = latestCode;
+    sampleReady = false;
+    portEXIT_CRITICAL(&timerMux);
+
+    uint8_t frame[3] = {0xA5, (uint8_t)(code & 0xFF), (uint8_t)(code >> 8)};
+    Serial.write(frame, sizeof(frame));
+  }
+}
