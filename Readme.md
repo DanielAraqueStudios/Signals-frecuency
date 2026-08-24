@@ -98,7 +98,7 @@ documented simulation, since no physical ESP32/Arduino hardware was
 available to flash and measure.
 
 **Stack:** NumPy · SciPy · Matplotlib · pytest · LaTeX · Arduino/ESP32 (C++)
-**Entry points:** `python main.py` (items 1-3) · `firmware/` (item 4 sketches + simulated logs) · `report/main.tex` (report)
+**Entry points:** `python main.py` (items 1-3) · `firmware/` (item 4 sketches + logs) · `report/main.tex` (report)
 **Full docs:** [`readme.md`](THEORY/FIRST_ROUND/TEST/readme.md)
 
 > More projects will be added here as new exercises are completed, each
