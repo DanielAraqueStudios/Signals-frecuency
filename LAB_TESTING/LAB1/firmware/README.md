@@ -1,7 +1,11 @@
 # LAB1 firmware — ESP32-WROOM signal digitization/reconstruction
 
 Five sketches, one per stage of the practice, written for an **ESP32-WROOM**
-board via the Arduino core for ESP32. The lab guide names an STM32 board
+board via the Arduino core for ESP32, **version 3.x** (the hardware-timer
+API — `timerBegin`/`timerAttachInterrupt`/`timerAlarm` — and the LEDC API
+— `ledcAttach`/`ledcWrite` — both changed incompatibly between core 2.x and
+3.x; these sketches use the 3.x signatures and will not compile against
+2.x). The lab guide names an STM32 board
 specifically for the PWM reconstruction stage; this project targets ESP32
 hardware throughout instead, since that's the board actually available.
 **No physical ESP32 board, oscilloscope, wave generator, BME280, or

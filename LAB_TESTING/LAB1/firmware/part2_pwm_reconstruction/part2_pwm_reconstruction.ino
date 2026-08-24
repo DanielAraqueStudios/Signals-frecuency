@@ -29,7 +29,6 @@
 
 const int ADC_PIN = 34;
 const int PWM_PIN = 26;
-const int PWM_CHANNEL = 0;
 const uint32_t SAMPLE_PERIOD_US = 2000;      // 2 ms -> 500 Hz sampling
 const uint32_t PWM_FREQUENCY_HZ = 5000;      // >= 10x sample rate, >= 5 kHz
 const int PWM_RESOLUTION_BITS = 10;          // 1024 duty levels
@@ -53,7 +52,7 @@ uint32_t codeToDuty(uint16_t code) {
 void IRAM_ATTR onSampleTick() {
   portENTER_CRITICAL_ISR(&timerMux);
   uint16_t code = analogRead(ADC_PIN);
-  ledcWrite(PWM_CHANNEL, codeToDuty(code));
+  ledcWrite(PWM_PIN, codeToDuty(code));
   latestCode = code;
   sampleReady = true;
   portEXIT_CRITICAL_ISR(&timerMux);
@@ -63,14 +62,12 @@ void setup() {
   analogReadResolution(12);
   Serial.begin(115200);
 
-  ledcSetup(PWM_CHANNEL, PWM_FREQUENCY_HZ, PWM_RESOLUTION_BITS);
-  ledcAttachPin(PWM_PIN, PWM_CHANNEL);
-  ledcWrite(PWM_CHANNEL, codeToDuty(0));
+  ledcAttach(PWM_PIN, PWM_FREQUENCY_HZ, PWM_RESOLUTION_BITS); // Arduino-ESP32 core 3.x LEDC API (channel-less)
+  ledcWrite(PWM_PIN, codeToDuty(0));
 
-  sampleTimer = timerBegin(0, 80, true);
-  timerAttachInterrupt(sampleTimer, &onSampleTick, true);
-  timerAlarmWrite(sampleTimer, SAMPLE_PERIOD_US, true);
-  timerAlarmEnable(sampleTimer);
+  sampleTimer = timerBegin(1000000);              // 1 MHz -> 1 tick = 1 us (Arduino-ESP32 core 3.x timer API)
+  timerAttachInterrupt(sampleTimer, &onSampleTick);
+  timerAlarm(sampleTimer, SAMPLE_PERIOD_US, true, 0); // period in us, auto-reload, infinite reloads
 }
 
 void loop() {

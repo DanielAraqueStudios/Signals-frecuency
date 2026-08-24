@@ -40,11 +40,10 @@ void setup() {
   analogReadResolution(12);
   lastIsrMs = millis();
 
-  // Timer 0, prescaler 80 -> 1 tick = 1 us (80 MHz APB clock / 80).
-  timer = timerBegin(0, 80, true);
-  timerAttachInterrupt(timer, &onTimer, true);
-  timerAlarmWrite(timer, SAMPLE_PERIOD_MS * 1000, true); // period in us, auto-reload
-  timerAlarmEnable(timer);
+  // 1 MHz timer clock -> 1 tick = 1 us (Arduino-ESP32 core 3.x timer API).
+  timer = timerBegin(1000000);
+  timerAttachInterrupt(timer, &onTimer);
+  timerAlarm(timer, SAMPLE_PERIOD_MS * 1000, true, 0); // period in us, auto-reload, infinite reloads
 }
 
 void loop() {

@@ -190,10 +190,9 @@ void setup() {
   readCalibration();
   Serial.begin(115200); // 3 floats @ 100 Hz needs ~1300 B/s, comfortable margin
 
-  sampleTimer = timerBegin(0, 80, true);
-  timerAttachInterrupt(sampleTimer, &onSampleTick, true);
-  timerAlarmWrite(sampleTimer, SAMPLE_PERIOD_US, true);
-  timerAlarmEnable(sampleTimer);
+  sampleTimer = timerBegin(1000000);              // 1 MHz -> 1 tick = 1 us (Arduino-ESP32 core 3.x timer API)
+  timerAttachInterrupt(sampleTimer, &onSampleTick);
+  timerAlarm(sampleTimer, SAMPLE_PERIOD_US, true, 0); // period in us, auto-reload, infinite reloads
 }
 
 void loop() {

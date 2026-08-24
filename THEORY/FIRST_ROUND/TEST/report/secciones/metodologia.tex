@@ -34,7 +34,7 @@ Per the assignment, this item was designed for two boards: an ESP32-WROOM, which
 \begin{enumerate}
 \item \textbf{4(a) — busy loop}: everything (sampling and summation) happens inside \texttt{loop()}, on a single thread. Implemented for both boards.
 \item \textbf{4(b) — dual core}: sampling runs as a FreeRTOS task pinned to core 0 (\texttt{xTaskCreatePinnedToCore}); the summation stays in \texttt{loop()}, running on core 1. ESP32-WROOM only.
-\item \textbf{4(c) — interrupt}: a hardware timer triggers an ISR every $100$ ms that only marks a timestamped flag; \texttt{loop()} processes the flag (reads the potentiometers and prints) and then runs the same blocking summation. Implemented for both boards (ESP32's \texttt{timerBegin}/\texttt{timerAlarmWrite} API vs. the Uno's \texttt{Timer1} in CTC mode).
+\item \textbf{4(c) — interrupt}: a hardware timer triggers an ISR every $100$ ms that only marks a timestamped flag; \texttt{loop()} processes the flag (reads the potentiometers and prints) and then runs the same blocking summation. Implemented for both boards (ESP32's \texttt{timerBegin}/\texttt{timerAttachInterrupt}/\texttt{timerAlarm} API, Arduino-ESP32 core 3.x, vs. the Uno's \texttt{Timer1} in CTC mode).
 \end{enumerate}
 
 The three ESP32 sketches were flashed on a real ESP32-WROOM board and their serial output was captured directly with the Arduino IDE's Serial Monitor at $115200$ baud, for each of the three values of $N$. The full captures (eight samples per sketch/$N$ combination) are in \texttt{firmware/real\_logs/*.txt}.

@@ -1,5 +1,11 @@
 # Item 4 — ESP32-WROOM and Arduino Uno sampling mechanisms
 
+The ESP32 sketches target the Arduino-ESP32 core, **version 3.x**
+(`esp32_c_interrupt`'s hardware-timer API — `timerBegin`/
+`timerAttachInterrupt`/`timerAlarm` — changed signature incompatibly
+between core 2.x and 3.x; it uses the 3.x signatures and will not compile
+against 2.x).
+
 Minimal Arduino sketches for an **ESP32-WROOM** board (mechanisms 4a/4b/4c)
 and an **Arduino Uno** (mechanisms 4a/4c only — the Uno's ATmega328P has no
 second core and no FreeRTOS, so there is no dual-core variant for it, per
@@ -100,7 +106,7 @@ the sample timing does not depend on how long the summation takes. There is
 no equivalent mechanism on the Uno, since it has only one core.
 
 **4(c) — hardware timer interrupt, both boards.** The timer peripheral
-(ESP32's `timerBegin`/`timerAlarmWrite`, or the Uno's `Timer1` in CTC mode)
+(ESP32's `timerBegin`/`timerAttachInterrupt`/`timerAlarm`, or the Uno's `Timer1` in CTC mode)
 fires the ISR independently of what `loop()` is doing. On the ESP32, for
 N=1,000,000 the captured period stays tight around 100 ms (`100–101 ms` per
 sample); for N=10,000,000 and N=100,000,000, seven of the eight printed
