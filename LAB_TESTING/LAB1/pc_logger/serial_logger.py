@@ -7,14 +7,14 @@ to a CSV file on disk -- no plotting, no visualization, per the assignment
 
 Usage:
     python serial_logger.py --mode adc      --port COM5 --baud 115200 --out data/periodic_signal/signal_50hz.csv
-    python serial_logger.py --mode imu      --port COM5 --baud 230400 --out data/imu_still/imu_still.csv
+    python serial_logger.py --mode bme280   --port COM5 --baud 115200 --out data/bme280_baseline/bme280_baseline.csv
     python serial_logger.py --mode encoder  --port COM5 --baud 115200 --out data/encoder/encoder_5v.csv
 
 Each mode matches one sync byte and frame size documented in
 firmware/README.md:
-    adc     (part1/part2 sketches): sync 0xA5, 3-byte frame, 1 channel
-    imu     (part3_imu_sensor):     sync 0xB5, 14-byte frame, 6 channels
-    encoder (part3_encoder_motor):  sync 0xC5, 5-byte frame, 1 channel
+    adc     (part1/part2 sketches):    sync 0xA5, 3-byte frame, 1 channel
+    bme280  (part3_bme280_sensor):     sync 0xB6, 13-byte frame, 3 channels (already physical units)
+    encoder (part3_encoder_motor):     sync 0xC5, 5-byte frame, 1 channel
 
 No physical hardware was available to run this end-to-end in this
 environment; the framing/parsing logic mirrors the .ino sources exactly
@@ -32,13 +32,6 @@ import time
 
 ADC_REF_VOLTS = 3.3
 ADC_MAX_CODE = 4095
-
-# MPU-6050 default full-scale ranges: +-2 g, +-250 deg/s (LSB sensitivity
-# per the datasheet). Adjust if a different IMU/full-scale range is used.
-ACCEL_LSB_PER_G = 16384.0
-GYRO_LSB_PER_DPS = 131.0
-G_TO_MS2 = 9.80665
-DEG_TO_RAD = 3.141592653589793 / 180.0
 
 ENCODER_SAMPLE_PERIOD_S = 0.005  # 5 ms, must match part3_encoder_motor.ino
 
@@ -59,16 +52,16 @@ def adc_decode(payload: bytes) -> tuple[float]:
     return (volts,)
 
 
-def imu_decode(payload: bytes) -> tuple[float, ...]:
-    ax, ay, az, gx, gy, gz = struct.unpack_from("<6h", payload, 0)
-    return (
-        (ax / ACCEL_LSB_PER_G) * G_TO_MS2,
-        (ay / ACCEL_LSB_PER_G) * G_TO_MS2,
-        (az / ACCEL_LSB_PER_G) * G_TO_MS2,
-        (gx / GYRO_LSB_PER_DPS) * DEG_TO_RAD,
-        (gy / GYRO_LSB_PER_DPS) * DEG_TO_RAD,
-        (gz / GYRO_LSB_PER_DPS) * DEG_TO_RAD,
-    )
+def bme280_decode(payload: bytes) -> tuple[float, float, float]:
+    """Unpack the three floats the BME280 sketch already compensated on-device.
+
+    Unlike adc_decode/encoder_decode, no unit conversion happens here: the
+    firmware sends temperature (deg C), pressure (hPa), and humidity (%RH)
+    directly, since the compensation formulas need per-sensor factory
+    calibration coefficients that live on the ESP32, not fixed constants.
+    """
+    temperature_c, pressure_hpa, humidity_pct = struct.unpack_from("<3f", payload, 0)
+    return (temperature_c, pressure_hpa, humidity_pct)
 
 
 def encoder_decode(payload: bytes, pulses_per_rev: int) -> tuple[float, float]:
@@ -82,10 +75,10 @@ def encoder_decode(payload: bytes, pulses_per_rev: int) -> tuple[float, float]:
 
 FRAME_FORMATS = {
     "adc": FrameFormat(0xA5, 3, ["volts"], adc_decode),
-    "imu": FrameFormat(
-        0xB5, 14,
-        ["accel_x_ms2", "accel_y_ms2", "accel_z_ms2", "gyro_x_rads", "gyro_y_rads", "gyro_z_rads"],
-        imu_decode,
+    "bme280": FrameFormat(
+        0xB6, 13,
+        ["temperature_c", "pressure_hpa", "humidity_pct"],
+        bme280_decode,
     ),
     # encoder_decode needs pulses_per_rev, bound via functools.partial in main()
     "encoder": FrameFormat(0xC5, 5, ["delta_angle_rad", "angular_velocity_rads"], None),
@@ -113,7 +106,7 @@ def parse_stream(read_bytes, frame_format: FrameFormat, decode_fn):
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="LAB1 serial-to-CSV logger (no plotting)")
-    parser.add_argument("--mode", choices=["adc", "imu", "encoder"], required=True)
+    parser.add_argument("--mode", choices=["adc", "bme280", "encoder"], required=True)
     parser.add_argument("--port", required=True, help="e.g. COM5 or /dev/ttyACM0")
     parser.add_argument("--baud", type=int, required=True)
     parser.add_argument("--out", required=True, help="output CSV path")

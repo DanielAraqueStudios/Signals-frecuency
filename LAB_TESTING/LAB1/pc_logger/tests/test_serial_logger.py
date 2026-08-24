@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from serial_logger import (
     FRAME_FORMATS,
     adc_decode,
-    imu_decode,
+    bme280_decode,
     encoder_decode,
     parse_stream,
     ADC_MAX_CODE,
@@ -41,21 +41,23 @@ class TestAdcDecode:
         assert abs(volts - ADC_REF_VOLTS / 2) < 0.01
 
 
-class TestImuDecode:
-    def test_all_zero_raw_gives_zero_physical(self):
-        payload = struct.pack("<6h", 0, 0, 0, 0, 0, 0)
-        values = imu_decode(payload)
-        assert all(abs(v) < 1e-9 for v in values)
+class TestBme280Decode:
+    def test_roundtrips_three_floats_unchanged(self):
+        payload = struct.pack("<3f", 23.45, 1013.25, 47.8)
+        values = bme280_decode(payload)
+        assert abs(values[0] - 23.45) < 1e-3
+        assert abs(values[1] - 1013.25) < 1e-3
+        assert abs(values[2] - 47.8) < 1e-3
 
-    def test_one_g_accel_converts_to_gravity(self):
-        payload = struct.pack("<6h", 16384, 0, 0, 0, 0, 0)
-        values = imu_decode(payload)
-        assert abs(values[0] - 9.80665) < 0.01
+    def test_negative_temperature_roundtrips(self):
+        payload = struct.pack("<3f", -5.0, 950.0, 10.0)
+        values = bme280_decode(payload)
+        assert abs(values[0] + 5.0) < 1e-3
 
-    def test_negative_values_roundtrip(self):
-        payload = struct.pack("<6h", -16384, 0, 0, 0, 0, 0)
-        values = imu_decode(payload)
-        assert abs(values[0] + 9.80665) < 0.01
+    def test_zero_values_roundtrip(self):
+        payload = struct.pack("<3f", 0.0, 0.0, 0.0)
+        values = bme280_decode(payload)
+        assert values == (0.0, 0.0, 0.0)
 
 
 class TestEncoderDecode:

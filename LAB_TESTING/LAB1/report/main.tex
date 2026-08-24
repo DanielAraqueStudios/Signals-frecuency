@@ -5,13 +5,13 @@
 %   - firmware/part1_digitization/         -> muestreo periódico, 500 Hz, ADC 12 bits
 %   - firmware/part2_dac_reconstruction/    -> reconstrucción vía DAC
 %   - firmware/part2_pwm_reconstruction/    -> reconstrucción vía PWM + filtro
-%   - firmware/part3_imu_sensor/            -> digitalización IMU (I2C), 200 Hz
+%   - firmware/part3_bme280_sensor/         -> digitalización BME280 (I2C), 100 Hz
 %   - firmware/part3_encoder_motor/         -> digitalización encoder/motor, 200 Hz
 %   - pc_logger/serial_logger.py            -> captura eficiente a CSV, sin graficar
 %   - matlab/*.m                            -> FFT, estadística, tablas de resultados
 %
 % Ningún hardware físico (tarjeta ESP32-WROOM, osciloscopio, generador de
-% señales, IMU, encoder/motoreductor) estuvo disponible en este entorno;
+% señales, BME280, encoder/motoreductor) estuvo disponible en este entorno;
 % las tablas de resultados se marcan explícitamente como pendientes de
 % captura real en lugar de contener datos inventados.
 %

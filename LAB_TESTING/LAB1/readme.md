@@ -5,16 +5,20 @@
 
 A complete signal-digitization system for a 32-bit microcontroller
 (ESP32-WROOM), covering periodic-signal sampling, signal reconstruction
-(DAC and PWM + low-pass filter), sensor digitization (IMU +
+(DAC and PWM + low-pass filter), sensor digitization (BME280 +
 encoder/DC-motor), and the aliasing phenomenon — matching each stage of
 the university lab guide reproduced in `report/secciones/`. The guide
 names an STM32 board specifically for the PWM reconstruction stage; this
 project targets ESP32 instead, since that's the board actually available
 — see `firmware/README.md` for the resulting hardware differences (most
-notably, the ESP32's DAC is 8-bit, not 12-bit).
+notably, the ESP32's DAC is 8-bit, not 12-bit). The guide's sensor stage
+also names an IMU (accelerometer/gyroscope); the sensor actually available
+is a Bosch BME280 (pressure/temperature/humidity) instead — see
+`firmware/README.md` for what that changes, including a sensor-imposed
+100 Hz sampling limit instead of 200 Hz.
 
 **No physical hardware was available** to build this (ESP32 board,
-oscilloscope, wave generator, IMU, encoder/motor): the firmware, PC-side
+oscilloscope, wave generator, BME280, encoder/motor): the firmware, PC-side
 logger, and MATLAB analysis scripts are complete and ready to run, but the
 report's result tables are honestly marked *pendiente* (pending) rather
 than containing invented measurements. See `report/secciones/resultados.tex`.
@@ -29,7 +33,7 @@ LAB1/
 │   ├── part1_digitization/           500 Hz timer-ISR sampling, 12-bit ADC
 │   ├── part2_dac_reconstruction/     Reconstruction via the onboard DAC
 │   ├── part2_pwm_reconstruction/     Reconstruction via 5 kHz PWM + external filter
-│   ├── part3_imu_sensor/             200 Hz, 6-channel I2C IMU capture
+│   ├── part3_bme280_sensor/          100 Hz, I2C BME280 (pressure/temp/humidity), sensor-limited rate
 │   ├── part3_encoder_motor/          200 Hz encoder pulse-counting
 │   └── README.md                     Wiring, framing, baud-rate justification
 ├── pc_logger/
@@ -38,15 +42,15 @@ LAB1/
 │       └── test_serial_logger.py     14 tests against synthetic byte streams
 ├── matlab/
 │   ├── analyze_periodic_signal.m     FFT + normalized-frequency table (Part 1)
-│   ├── analyze_imu.m                 Stats + bandwidth per IMU channel (Part 3)
+│   ├── analyze_bme280.m              Stats + bandwidth per BME280 channel (Part 3)
 │   ├── analyze_encoder.m             Velocity stats + bandwidth (Part 3)
 │   ├── analyze_aliasing.m            Folded-frequency table (optional aliasing section)
 │   └── README.md
 ├── data/                             Empty placeholders for real captures, one per experiment
 │   ├── periodic_signal/
 │   ├── reconstruction/
-│   ├── imu_still/
-│   ├── imu_moving/
+│   ├── bme280_baseline/
+│   ├── bme280_perturbed/
 │   ├── encoder/
 │   └── aliasing/
 ├── report/                           IEEE-conference LaTeX report (en español)
@@ -76,7 +80,7 @@ pip install pyserial pytest
 # 2. Capture data to CSV:
 cd pc_logger
 python serial_logger.py --mode adc     --port COM5 --baud 115200 --out ../data/periodic_signal/signal_50hz.csv
-python serial_logger.py --mode imu     --port COM5 --baud 230400 --out ../data/imu_still/imu_still.csv
+python serial_logger.py --mode bme280  --port COM5 --baud 115200 --out ../data/bme280_baseline/bme280_baseline.csv
 python serial_logger.py --mode encoder --port COM5 --baud 115200 --out ../data/encoder/encoder_5v.csv --pulses-per-rev 20
 
 # 3. Analyze in MATLAB:
@@ -91,7 +95,7 @@ python -m pytest tests/ -v
 ```
 
 14 tests, all passing — cover the binary-frame decoding math (ADC→volts,
-IMU raw→physical units, encoder pulses→angle/velocity) and the
+BME280 float passthrough, encoder pulses→angle/velocity) and the
 frame-resync parser, using synthetic byte streams rather than a live
 serial port.
 

@@ -4,7 +4,7 @@ Five sketches, one per stage of the practice, written for an **ESP32-WROOM**
 board via the Arduino core for ESP32. The lab guide names an STM32 board
 specifically for the PWM reconstruction stage; this project targets ESP32
 hardware throughout instead, since that's the board actually available.
-**No physical ESP32 board, oscilloscope, wave generator, IMU, or
+**No physical ESP32 board, oscilloscope, wave generator, BME280, or
 encoder/motor was available in this environment** — these sketches are
 written to compile and run as-is, but have not been flashed or tested on
 real hardware. `report/` treats every hardware-dependent result as pending
@@ -25,6 +25,25 @@ The ESP32's ADC is also known to be less linear than an ideal 12-bit
 converter, particularly near the rails — worth keeping in mind when
 comparing captured voltages against the generator's configured amplitude.
 
+## Sensor stage: BME280 instead of an IMU
+
+The lab guide's original sensor stage asks for an inertial measurement unit
+(IMU, accelerometer + gyroscope). The sensor actually available for this
+build is a **Bosch BME280** instead — pressure, temperature, and relative
+humidity, not motion. `part3_bme280_sensor/` replaces the IMU sketch
+entirely; there is no accelerometer/gyroscope data anywhere in this
+project. This also changes what "still vs. moving" from the guide means in
+practice — see `report/secciones/resultados.tex` and `discusion.tex` for
+the adapted "baseline vs. perturbed ambient conditions" framing.
+
+It also imposes its own hardware rate limit, in the same spirit as the
+ESP32 DAC's 8-bit resolution above: a BME280 forced-mode measurement of
+temperature + pressure + humidity at x1 oversampling takes up to ≈9.3 ms
+per the datasheet, i.e. at most ≈107 Hz — it cannot sustain the 200 Hz used
+by the encoder stage. `part3_bme280_sensor.ino` samples at **100 Hz**
+instead, and the report documents this as a real sensor constraint, not a
+firmware shortcut.
+
 ## Sketches
 
 | Folder | Stage | Sample rate | Notes |
@@ -32,7 +51,7 @@ comparing captured voltages against the generator's configured amplitude.
 | `part1_digitization/` | Digitalización de señales periódicas | 500 Hz (2 ms) | Hardware timer ISR toggles a debug pin + captures the ADC; Serial send happens in `loop()` (not the ISR — see below). |
 | `part2_dac_reconstruction/` | Reconstrucción — DAC | 500 Hz (2 ms) | ADC capture mirrored to the 8-bit DAC, same ISR. |
 | `part2_pwm_reconstruction/` | Reconstrucción — PWM + filtro | 500 Hz (2 ms) capture, 5 kHz PWM (LEDC, 10-bit duty) | Duty mapped 1–99% from the ADC code; needs an external active low-pass filter (not firmware — see report). |
-| `part3_imu_sensor/` | Digitalización de sensores — IMU | 200 Hz (5 ms) | 6-channel I2C IMU (MPU-6050 register map assumed; adjust per actual sensor). |
+| `part3_bme280_sensor/` | Digitalización de sensores — BME280 | 100 Hz (10 ms) | I2C pressure/temperature/humidity, on-device compensated (sensor-limited rate, see below). |
 | `part3_encoder_motor/` | Digitalización de sensores — encoder | 200 Hz (5 ms) | Pulse-counting strategy; `PULSES_PER_REV` must be set from the real encoder. |
 
 ## Why Serial I/O happens in `loop()`, not the ISR
@@ -66,15 +85,16 @@ PC-side.
 |---|---:|---:|---:|
 | `part1_digitization` | 3 B | 500 Hz | 1,500 B/s |
 | `part2_*_reconstruction` | 3 B | 500 Hz | 1,500 B/s |
-| `part3_imu_sensor` | 14 B | 200 Hz | 2,800 B/s |
+| `part3_bme280_sensor` | 13 B | 100 Hz | 1,300 B/s |
 | `part3_encoder_motor` | 5 B | 200 Hz | 1,000 B/s |
 
 At 9,600 baud (≈960 B/s usable after start/stop bits), none of these fit —
 the assignment's warning that 9,600 bit/s is insufficient checks out
-numerically once framing overhead is counted. `part1`/`part2` use 115,200
-baud (≈11,520 B/s, a 7.7x margin over 1,500 B/s); `part3_imu_sensor` uses
-230,400 baud (≈23,040 B/s, an 8.2x margin over 2,800 B/s) since it carries
-the most bytes/sample of the five sketches.
+numerically once framing overhead is counted. All four sketches use
+115,200 baud (≈11,520 B/s), which comfortably covers every row above
+(smallest margin 7.7x, on `part1`/`part2`); `part3_bme280_sensor` no longer
+needs the 230,400 baud the 6-channel IMU frame required, since its 100 Hz
+rate and 13-byte frame need less than half the throughput.
 
 ## Wiring summary
 
@@ -91,8 +111,10 @@ the most bytes/sample of the five sketches.
   outside this firmware; a 2nd-order Sallen-Key low-pass is suggested in
   the report, since a single RC stage's −20 dB/decade roll-off cannot
   reach −20 dB only 100 Hz above a 500 Hz cutoff.
-- **Part 3 (IMU)**: I2C `SDA`→`GPIO21`, `SCL`→`GPIO22` (ESP32
-  `Wire.begin()` defaults), `VCC`→`3V3`, `GND`→`GND`.
+- **Part 3 (BME280)**: I2C `SDA`→`GPIO21`, `SCL`→`GPIO22` (ESP32
+  `Wire.begin()` defaults), `VCC`→`3V3`, `GND`→`GND`, I2C address `0x76`
+  (default when the sensor's `SDO` pin is tied low — change to `0x77` in
+  `part3_bme280_sensor.ino` if it's tied high instead).
 - **Part 3 (encoder/motor)**: encoder channel A → `GPIO4` (interrupt pin),
   channel B → `GPIO16` (direction sign); motor driver per the driver
   module's own datasheet.
