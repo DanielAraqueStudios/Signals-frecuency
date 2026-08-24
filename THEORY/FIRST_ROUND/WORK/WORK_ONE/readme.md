@@ -1,6 +1,6 @@
 # DTMF Dialer
 
-> Part of the [`Signals-frecuency`](../Readme.md) repository — see the root
+> Part of the [`Signals-frecuency`](../../../../Readme.md) repository — see the root
 > README for the full project index.
 
 A Python package that synthesizes, exports, and plays **DTMF

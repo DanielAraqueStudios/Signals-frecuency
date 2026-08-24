@@ -1,0 +1,91 @@
+% ============================================================
+% Muestreo, cuantización, FFT de audio y sistemas embebidos (proyecto TEST, THEORY/FIRST_ROUND/TEST)
+%
+% Construido a partir de la implementación real del proyecto:
+%   - signal_tools/csv_signal.py   -> load_csv_signal, segment_signal,
+%                                      dominant_frequency (item 1)
+%   - signal_tools/sampling.py     -> sine_wave, sample_signal,
+%                                      quantize_dac, is_aliased (item 2)
+%   - signal_tools/audio_fft.py    -> load_wav, compute_fft_spectrum,
+%                                      dominant_frequency (item 3)
+%   - firmware/                    -> esp32_a_busy_loop, esp32_b_dualcore,
+%                                      esp32_c_interrupt (item 4)
+%
+% Para compilar: pdflatex main.tex (dos pasadas si se usa \ref/\eqref)
+% Las figuras de report/figuras/ se generan ejecutando: python main.py
+% ============================================================
+
+\documentclass[conference]{IEEEtran}
+
+% ============================================================
+% PAQUETES
+% ============================================================
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+
+\usepackage{cite}
+\usepackage{url}
+
+\usepackage{xcolor}
+
+\graphicspath{{figuras/}}
+
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  frame=single,
+  columns=fullflexible
+}
+
+% ============================================================
+% INFORMACIÓN DEL DOCUMENTO
+% ============================================================
+
+\title{
+Muestreo, cuantización, análisis espectral de audio y precisión temporal en sistemas embebidos
+}
+
+\author{
+\IEEEauthorblockN{
+% TODO: reemplazar por los nombres completos de los autores
+Nombre Apellido
+}
+
+\IEEEauthorblockA{
+Programa de Ingeniería Mecatrónica\\
+Universidad Militar Nueva Granada\\
+Bogotá, Colombia\\
+correo@ejemplo.com
+}
+}
+
+% ============================================================
+% DOCUMENTO
+% ============================================================
+
+\begin{document}
+
+\maketitle
+
+\input{secciones/resumen}
+\input{secciones/introduccion}
+\input{secciones/fundamento}
+\input{secciones/metodologia}
+\input{secciones/resultados}
+\input{secciones/embebidos}
+\input{secciones/discusion}
+\input{secciones/conclusiones}
+\input{secciones/referencias}
+
+\end{document}

@@ -1,0 +1,40 @@
+% ============================================================
+% III. METODOLOGÍA
+% ============================================================
+
+\section{Metodología}
+
+Los tres primeros ejercicios se implementaron en el paquete \texttt{signal\_tools} del proyecto \texttt{WORK\_FOUR}, apoyado en NumPy y SciPy \cite{numpy, scipy}, y se ejecutaron mediante \texttt{python main.py}, que genera todas las figuras de esta sección directamente a partir de los datos reales del proyecto.
+
+\subsection{Item 1 — Análisis de \texttt{Muestra01.csv}}
+
+El archivo \texttt{Muestra01.csv} contiene $1000$ valores de amplitud, uno por línea, registrados a una frecuencia de muestreo $f_s = 5000$ Hz. Siguiendo el enunciado, la señal se dividió en segmentos de $dt = 0.05$ s de duración ($250$ muestras por segmento a $5000$ Hz), obteniendo $4$ segmentos completos (\texttt{segment\_signal}). Para cada segmento se calculó su espectro mediante \texttt{numpy.fft.rfft} y su frecuencia dominante (\texttt{dominant\_frequency}), excluyendo la componente DC.
+
+\subsection{Item 2 — Muestreo y cuantización de un seno de 100 Hz}
+
+Se generó una señal de referencia $x(t) = \sin(2\pi \cdot 100 \cdot t)$ y se muestreó (\texttt{sample\_signal}) a tres frecuencias: $70$, $500$ y $1000$ Hz, sobre una ventana de $0.05$ s. Cada conjunto de muestras se cuantizó (\texttt{quantize\_dac}) con $b=3$ bits ($8$ niveles), simulando el proceso de conversión analógico-digital de un DAC. Para $f_s = 70$ Hz, $2f_s < 2\cdot100$ Hz, por lo que el muestreo viola el teorema de Nyquist y produce aliasing; para $500$ Hz y $1000$ Hz, $f_s \geq 2\cdot100$ Hz y no hay aliasing.
+
+\subsection{Item 3 — FFT de violín, tambor y gato}
+
+Se emplearon tres grabaciones de audio reales en formato WAV:
+
+\begin{itemize}
+\item \texttt{violin.wav} — $44\,100$ Hz, $2.00$ s
+\item \texttt{tambor.wav} — $44\,100$ Hz, $0.96$ s
+\item \texttt{gato.wav} — $11\,025$ Hz, $1.58$ s
+\end{itemize}
+
+Cada archivo se cargó con \texttt{scipy.io.wavfile} (\texttt{load\_wav}), se redujo a un solo canal si era estéreo, y se normalizó a $[-1,1]$. Se calculó el espectro de magnitud de un solo lado (\texttt{compute\_fft\_spectrum}) y su frecuencia dominante para cada señal completa.
+
+\subsection{Item 4 — Precisión de muestreo en ESP32-WROOM}
+\label{sec:metodologia-embebidos}
+
+Se diseñaron tres sketches mínimos de Arduino para un ESP32-WROOM (carpeta \texttt{firmware/}), cada uno leyendo tres potenciómetros (\texttt{GPIO34}, \texttt{GPIO35}, \texttt{GPIO32}, canales ADC1) con un periodo nominal de $100$ ms, mientras el procesador ejecuta en paralelo una suma bloqueante de $1$ a $N$ (con $N \in \{10\,000\,000,\ 1\,000\,000,\ 100\,000\,000\}$):
+
+\begin{enumerate}
+\item \textbf{4(a) — bucle bloqueante}: todo (muestreo y suma) ocurre dentro de \texttt{loop()}, en un único hilo.
+\item \textbf{4(b) — doble núcleo}: el muestreo se ejecuta como tarea de FreeRTOS anclada al núcleo 0 (\texttt{xTaskCreatePinnedToCore}); la suma permanece en \texttt{loop()}, ejecutado en el núcleo 1.
+\item \textbf{4(c) — interrupción}: un temporizador de hardware dispara una ISR cada $100$ ms que solo marca una bandera con marca de tiempo; \texttt{loop()} procesa la bandera (lee los potenciómetros e imprime) y luego ejecuta la misma suma bloqueante.
+\end{enumerate}
+
+\textbf{No se dispuso de un ESP32-WROOM ni un Arduino Uno físicos para flashear y capturar datos de puerto serie reales.} En su lugar, \texttt{firmware/simulate\_serial\_output.py} genera una simulación explícitamente etiquetada como tal, a partir de un modelo de temporización documentado en el propio script y en \texttt{firmware/README.md}: el bucle bloqueante añade el tiempo de suma completo al periodo de muestreo; la tarea de doble núcleo mantiene el periodo nominal con \emph{jitter} de planificación de FreeRTOS ($\pm 2$ ms); y la interrupción mantiene su referencia temporal exacta ($\pm 1$ ms) pero puede acumular una muestra ``atrasada'' cuando \texttt{loop()} no alcanza a procesar la bandera antes de que la suma termine. Los archivos generados (\texttt{firmware/simulated\_logs/*.txt}) llevan la marca \texttt{SIMULATED} en su encabezado.

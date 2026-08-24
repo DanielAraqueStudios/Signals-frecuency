@@ -1,6 +1,6 @@
 # Sampling, Fourier Series & Spectral Analysis Lab
 
-> Part of the [`Signals-frecuency`](../Readme.md) repository — see the root
+> Part of the [`Signals-frecuency`](../../../../Readme.md) repository — see the root
 > README for the full project index.
 
 A Python package covering a set of signal-sampling and spectral-analysis

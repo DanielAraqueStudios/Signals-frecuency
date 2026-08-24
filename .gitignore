@@ -17,14 +17,14 @@ __pycache__/
 .pytest_cache/
 
 # Generated audio output
-WORK_ONE/output/
+THEORY/FIRST_ROUND/WORK/WORK_ONE/output/
 
 # User-provided audio samples (large binaries, not checked in)
-WORK_THREE/audio_samples/*/*.wav
-WORK_THREE/audio_samples/*/*.mp3
-WORK_THREE/audio_samples/*/*.flac
-WORK_THREE/audio_samples/*/*.ogg
-WORK_THREE/audio_samples/*/*.m4a
+THEORY/FIRST_ROUND/WORK/WORK_THREE/audio_samples/*/*.wav
+THEORY/FIRST_ROUND/WORK/WORK_THREE/audio_samples/*/*.mp3
+THEORY/FIRST_ROUND/WORK/WORK_THREE/audio_samples/*/*.flac
+THEORY/FIRST_ROUND/WORK/WORK_THREE/audio_samples/*/*.ogg
+THEORY/FIRST_ROUND/WORK/WORK_THREE/audio_samples/*/*.m4a
 
 # Ruflo local secrets and runtime data
 .env

@@ -1,0 +1,53 @@
+% ============================================================
+% II. FUNDAMENTO TEÓRICO
+% ============================================================
+
+\section{Fundamento teórico}
+
+\subsection{Muestreo y teorema de Nyquist}
+\label{sec:aliasing}
+
+Una señal analógica $x(t)$ se convierte en una secuencia discreta mediante el muestreo periódico \cite{oppenheim}:
+
+\begin{equation}
+x[n] = x(nT_s)
+\end{equation}
+
+donde $T_s = 1/f_s$ es el periodo de muestreo. El teorema de muestreo de Nyquist establece que una señal puede reconstruirse sin pérdida de información únicamente si:
+
+\begin{equation}
+f_s \geq 2 f_{\max}
+\end{equation}
+
+siendo $f_{\max}$ la frecuencia más alta presente en la señal. Cuando esta condición no se cumple, ocurre \textbf{aliasing}: las componentes de frecuencia superiores a $f_s/2$ (frecuencia de Nyquist) se ``pliegan'' y aparecen en la señal reconstruida como componentes de frecuencia distinta —típicamente más baja— a la real, de forma indistinguible de una componente genuina de esa frecuencia. La prevención estándar consiste en (a) elegir $f_s \geq 2f_{\max}$ y/o (b) aplicar un filtro analógico pasa-bajos anti-aliasing antes del muestreo, que atenúe el contenido por encima de $f_s/2$ que la tasa elegida no podrá representar correctamente.
+
+\subsection{Cuantización (algoritmo DAC)}
+
+La cuantización aproxima cada muestra continua en amplitud a uno de $2^{b}$ niveles discretos, donde $b$ es el número de bits del convertidor. La función \texttt{quantize\_dac} de \texttt{signal\_tools/sampling.py} implementa este proceso normalizando la señal a $[0,1]$, redondeando al nivel más cercano de $2^b - 1$ intervalos, y reescalando de vuelta a $[-1,1]$:
+
+\begin{equation}
+x_q[n] = \frac{\operatorname{round}\!\left(\dfrac{x[n]+1}{2}(2^b-1)\right)}{2^b-1}\cdot 2 - 1
+\end{equation}
+
+Un mayor número de bits reduce el error de cuantización pero requiere un convertidor de mayor resolución.
+
+\subsection{Transformada Rápida de Fourier}
+
+La FFT calcula eficientemente la Transformada Discreta de Fourier \cite{lyons}:
+
+\begin{equation}
+X[k] = \sum_{n=0}^{N-1} x[n]\,e^{-j2\pi kn/N}
+\end{equation}
+
+Las funciones \texttt{dominant\_frequency} de \texttt{signal\_tools/csv\_signal.py} y \texttt{signal\_tools/audio\_fft.py} calculan el espectro de magnitud de un solo lado mediante \texttt{numpy.fft.rfft} \cite{numpy} normalizado por $N$, e identifican el pico de mayor magnitud excluyendo la componente en $0$ Hz (nivel DC).
+
+\subsection{Mecanismos de muestreo concurrente en un microcontrolador}
+
+En un microcontrolador de un solo núcleo (o cuando todo el trabajo se ejecuta en un solo hilo), cualquier operación bloqueante que se ejecute dentro del mismo bucle que realiza el muestreo retrasa directamente la siguiente muestra: el periodo de muestreo \emph{efectivo} deja de ser el periodo \emph{nominal} programado. El ESP32-WROOM, al ser un sistema de doble núcleo con soporte de FreeRTOS y temporizadores de hardware, permite dos estrategias para desacoplar el muestreo de una carga de cómputo concurrente:
+
+\begin{itemize}
+\item \textbf{Multihilo/multinúcleo}: fijar (\emph{pin}) una tarea de muestreo a un núcleo distinto del que ejecuta la carga de cómputo, de modo que ambos se ejecuten físicamente en paralelo.
+\item \textbf{Interrupciones}: usar un temporizador de hardware que dispare una rutina de servicio de interrupción (ISR) de forma independiente del código en ejecución en \texttt{loop()}, garantizando una referencia temporal exacta incluso si el procesamiento posterior de cada muestra se retrasa.
+\end{itemize}
+
+Estos dos mecanismos se contrastan en la Sección~\ref{sec:embebidos} frente al caso base de un único hilo bloqueante.

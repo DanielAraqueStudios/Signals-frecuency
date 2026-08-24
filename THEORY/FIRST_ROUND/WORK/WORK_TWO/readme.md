@@ -1,6 +1,6 @@
 # Fourier Square-Wave Sampling
 
-> Part of the [`Signals-frecuency`](../Readme.md) repository — see the root
+> Part of the [`Signals-frecuency`](../../../../Readme.md) repository — see the root
 > README for the full project index.
 
 A Python package that reconstructs a **square wave from its Fourier sine

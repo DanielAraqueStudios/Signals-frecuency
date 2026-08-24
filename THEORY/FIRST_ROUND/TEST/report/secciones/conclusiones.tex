@@ -1,0 +1,13 @@
+% ============================================================
+% VII. CONCLUSIONES
+% ============================================================
+
+\section{Conclusiones}
+
+El análisis de \texttt{Muestra01.csv} mostró que su contenido espectral dominante cambia entre los cuatro segmentos de $0.05$ s evaluados ($1200.00$, $1600.00$, $940.00$ y $1300.00$ Hz), evidenciando que se trata de una señal no estacionaria dentro de la ventana total registrada.
+
+El muestreo del seno de $100$ Hz confirmó experimentalmente el teorema de Nyquist: a $70$ Hz ($f_s < 2f_{\max}$) las cuatro muestras obtenidas en $0.05$ s no representan de forma inequívoca la señal original y son compatibles con aliasing, mientras que a $500$ Hz y $1000$ Hz ($f_s \geq 2f_{\max}$) la forma de onda cuantizada sigue fielmente al seno de referencia. La prevención del aliasing requiere, en la práctica, satisfacer $f_s \geq 2f_{\max}$ y/o filtrar analógicamente el contenido por encima de $f_s/2$ antes de muestrear.
+
+La comparación FFT de violín, tambor y gato mostró tres frecuencias dominantes claramente separadas ($385.50$, $7596.10$ y $1715.08$ Hz respectivamente), confirmando que el análisis de frecuencias sí permite diferenciar estas tres fuentes sonoras entre sí. Sin embargo, el caso del tambor —cuyo pico dominante refleja el transitorio de ataque más que un tono fundamental grave— muestra que esta diferenciación no siempre corresponde a una interpretación musical intuitiva y debe leerse con cuidado según la naturaleza tonal o percusiva de la fuente.
+
+Sobre la precisión de muestreo en el ESP32-WROOM, el modelo simulado (sin hardware físico disponible) indica que el mecanismo de bucle bloqueante de un solo hilo es el único cuyo periodo de muestreo se degrada de forma proporcional a la carga de cómputo concurrente; los mecanismos de doble núcleo y de interrupción de hardware desacoplan, cada uno a su manera, el muestreo de dicha carga. El de doble núcleo resultó el más preciso en cuanto al periodo de muestreo efectivamente alcanzado; el de interrupción ofrece la referencia temporal más exacta a nivel de disparo, aunque su procesamiento puede rezagarse bajo cargas muy largas. La verificación empírica de estos resultados en hardware real —flasheando los tres sketches de \texttt{firmware/} en un ESP32-WROOM y capturando datos de puerto serie genuinos— queda como trabajo futuro directo de este informe.
