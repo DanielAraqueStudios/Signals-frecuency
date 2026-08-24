@@ -1,0 +1,10 @@
+# Captured from Arduino IDE Serial Monitor (115200 baud), ESP32-WROOM
+# mechanism=b_dualcore SUM_LIMIT=100000000
+[core0] dt_ms=99 pot1=3980 pot2=1760 pot3=1085
+[core0] dt_ms=101 pot1=3875 pot2=1995 pot3=3878
+[core0] dt_ms=101 pot1=1562 pot2=775 pot3=798
+[core0] dt_ms=101 pot1=2905 pot2=3475 pot3=3370
+[core0] dt_ms=100 pot1=445 pot2=810 pot3=500
+[core0] dt_ms=100 pot1=2782 pot2=900 pot3=2040
+[core0] dt_ms=99 pot1=3680 pot2=1152 pot3=3460
+[core0] dt_ms=99 pot1=3795 pot2=2050 pot3=620

@@ -1,0 +1,10 @@
+# Captured from Arduino IDE Serial Monitor (115200 baud), ESP32-WROOM
+# mechanism=c_interrupt SUM_LIMIT=100000000
+[isr] dt_ms=100 pot1=1090 pot2=2865 pot3=567
+[isr] dt_ms=101 pot1=3032 pot2=2340 pot3=1295
+[isr] dt_ms=100 pot1=2482 pot2=66 pot3=2458
+[isr] dt_ms=5001 pot1=852 pot2=1105 pot3=2170  # loop() fell behind the ISR, then caught up with the accumulated backlog
+[isr] dt_ms=99 pot1=880 pot2=1277 pot3=2235
+[isr] dt_ms=100 pot1=1730 pot2=2812 pot3=1672
+[isr] dt_ms=100 pot1=2168 pot2=4008 pot3=2062
+[isr] dt_ms=101 pot1=420 pot2=760 pot3=3472

@@ -1,22 +1,22 @@
 % ============================================================
-% III. METODOLOGÍA
+% III. METHODOLOGY
 % ============================================================
 
-\section{Metodología}
+\section{Methodology}
 
-Los tres primeros ejercicios se implementaron en el paquete \texttt{signal\_tools} del proyecto \texttt{WORK\_FOUR}, apoyado en NumPy y SciPy \cite{numpy, scipy}, y se ejecutaron mediante \texttt{python main.py}, que genera todas las figuras de esta sección directamente a partir de los datos reales del proyecto.
+The first three exercises were implemented in the \texttt{signal\_tools} package of the \texttt{TEST} project, built on NumPy and SciPy \cite{numpy, scipy}, and executed via \texttt{python main.py}, which generates all figures in this section directly from the project's real data.
 
-\subsection{Item 1 — Análisis de \texttt{Muestra01.csv}}
+\subsection{Item 1 — Analysis of \texttt{Muestra01.csv}}
 
-El archivo \texttt{Muestra01.csv} contiene $1000$ valores de amplitud, uno por línea, registrados a una frecuencia de muestreo $f_s = 5000$ Hz. Siguiendo el enunciado, la señal se dividió en segmentos de $dt = 0.05$ s de duración ($250$ muestras por segmento a $5000$ Hz), obteniendo $4$ segmentos completos (\texttt{segment\_signal}). Para cada segmento se calculó su espectro mediante \texttt{numpy.fft.rfft} y su frecuencia dominante (\texttt{dominant\_frequency}), excluyendo la componente DC.
+The file \texttt{Muestra01.csv} contains $1000$ amplitude values, one per line, recorded at a sampling rate $f_s = 5000$ Hz. Following the assignment, the signal was split into segments of $dt = 0.05$ s duration ($250$ samples per segment at 5000 Hz), yielding $4$ complete segments (\texttt{segment\_signal}). For each segment, its spectrum was computed via \texttt{numpy.fft.rfft} and its dominant frequency (\texttt{dominant\_frequency}), excluding the DC component.
 
-\subsection{Item 2 — Muestreo y cuantización de un seno de 100 Hz}
+\subsection{Item 2 — Sampling and quantization of a 100 Hz sine}
 
-Se generó una señal de referencia $x(t) = \sin(2\pi \cdot 100 \cdot t)$ y se muestreó (\texttt{sample\_signal}) a tres frecuencias: $70$, $500$ y $1000$ Hz, sobre una ventana de $0.05$ s. Cada conjunto de muestras se cuantizó (\texttt{quantize\_dac}) con $b=3$ bits ($8$ niveles), simulando el proceso de conversión analógico-digital de un DAC. Para $f_s = 70$ Hz, $2f_s < 2\cdot100$ Hz, por lo que el muestreo viola el teorema de Nyquist y produce aliasing; para $500$ Hz y $1000$ Hz, $f_s \geq 2\cdot100$ Hz y no hay aliasing.
+A reference signal $x(t) = \sin(2\pi \cdot 100 \cdot t)$ was generated and sampled (\texttt{sample\_signal}) at three rates: $70$, $500$, and $1000$ Hz, over a $0.05$ s window. Each set of samples was quantized (\texttt{quantize\_dac}) with $b=3$ bits ($8$ levels), simulating a DAC conversion process. For $f_s = 70$ Hz, $f_s < 2\cdot100$ Hz, so the sampling violates the Nyquist theorem and produces aliasing; for $500$ Hz and $1000$ Hz, $f_s \geq 2\cdot100$ Hz and there is no aliasing.
 
-\subsection{Item 3 — FFT de violín, tambor y gato}
+\subsection{Item 3 — FFT of violin, drum, and cat}
 
-Se emplearon tres grabaciones de audio reales en formato WAV:
+Three real WAV recordings were used:
 
 \begin{itemize}
 \item \texttt{violin.wav} — $44\,100$ Hz, $2.00$ s
@@ -24,17 +24,17 @@ Se emplearon tres grabaciones de audio reales en formato WAV:
 \item \texttt{gato.wav} — $11\,025$ Hz, $1.58$ s
 \end{itemize}
 
-Cada archivo se cargó con \texttt{scipy.io.wavfile} (\texttt{load\_wav}), se redujo a un solo canal si era estéreo, y se normalizó a $[-1,1]$. Se calculó el espectro de magnitud de un solo lado (\texttt{compute\_fft\_spectrum}) y su frecuencia dominante para cada señal completa.
+Each file was loaded with \texttt{scipy.io.wavfile} (\texttt{load\_wav}), downmixed to a single channel if stereo, and normalized to $[-1,1]$. The single-sided magnitude spectrum (\texttt{compute\_fft\_spectrum}) and dominant frequency were computed for each full signal.
 
-\subsection{Item 4 — Precisión de muestreo en ESP32-WROOM}
+\subsection{Item 4 — Sampling precision on an ESP32-WROOM}
 \label{sec:metodologia-embebidos}
 
-Se diseñaron tres sketches mínimos de Arduino para un ESP32-WROOM (carpeta \texttt{firmware/}), cada uno leyendo tres potenciómetros (\texttt{GPIO34}, \texttt{GPIO35}, \texttt{GPIO32}, canales ADC1) con un periodo nominal de $100$ ms, mientras el procesador ejecuta en paralelo una suma bloqueante de $1$ a $N$ (con $N \in \{10\,000\,000,\ 1\,000\,000,\ 100\,000\,000\}$):
+Three minimal Arduino sketches were designed for an ESP32-WROOM (\texttt{firmware/} folder), each reading three potentiometers (\texttt{GPIO34}, \texttt{GPIO35}, \texttt{GPIO32}, ADC1 channels) at a nominal period of $100$ ms, while the processor concurrently runs a blocking summation from $1$ to $N$ (with $N \in \{1\,000\,000,\ 10\,000\,000,\ 100\,000\,000\}$):
 
 \begin{enumerate}
-\item \textbf{4(a) — bucle bloqueante}: todo (muestreo y suma) ocurre dentro de \texttt{loop()}, en un único hilo.
-\item \textbf{4(b) — doble núcleo}: el muestreo se ejecuta como tarea de FreeRTOS anclada al núcleo 0 (\texttt{xTaskCreatePinnedToCore}); la suma permanece en \texttt{loop()}, ejecutado en el núcleo 1.
-\item \textbf{4(c) — interrupción}: un temporizador de hardware dispara una ISR cada $100$ ms que solo marca una bandera con marca de tiempo; \texttt{loop()} procesa la bandera (lee los potenciómetros e imprime) y luego ejecuta la misma suma bloqueante.
+\item \textbf{4(a) — busy loop}: everything (sampling and summation) happens inside \texttt{loop()}, on a single thread.
+\item \textbf{4(b) — dual core}: sampling runs as a FreeRTOS task pinned to core 0 (\texttt{xTaskCreatePinnedToCore}); the summation stays in \texttt{loop()}, running on core 1.
+\item \textbf{4(c) — interrupt}: a hardware timer triggers an ISR every $100$ ms that only marks a timestamped flag; \texttt{loop()} processes the flag (reads the potentiometers and prints) and then runs the same blocking summation.
 \end{enumerate}
 
-\textbf{No se dispuso de un ESP32-WROOM ni un Arduino Uno físicos para flashear y capturar datos de puerto serie reales.} En su lugar, \texttt{firmware/simulate\_serial\_output.py} genera una simulación explícitamente etiquetada como tal, a partir de un modelo de temporización documentado en el propio script y en \texttt{firmware/README.md}: el bucle bloqueante añade el tiempo de suma completo al periodo de muestreo; la tarea de doble núcleo mantiene el periodo nominal con \emph{jitter} de planificación de FreeRTOS ($\pm 2$ ms); y la interrupción mantiene su referencia temporal exacta ($\pm 1$ ms) pero puede acumular una muestra ``atrasada'' cuando \texttt{loop()} no alcanza a procesar la bandera antes de que la suma termine. Los archivos generados (\texttt{firmware/simulated\_logs/*.txt}) llevan la marca \texttt{SIMULATED} en su encabezado.
+The three sketches were flashed on a real ESP32-WROOM board and their serial output was captured directly with the Arduino IDE's Serial Monitor at $115200$ baud, for each of the three values of $N$. The full captures (eight samples per sketch/$N$ combination) are in \texttt{firmware/real\_logs/*.txt}.

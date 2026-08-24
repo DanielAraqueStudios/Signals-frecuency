@@ -1,53 +1,53 @@
 % ============================================================
-% II. FUNDAMENTO TEÓRICO
+% II. THEORETICAL BACKGROUND
 % ============================================================
 
-\section{Fundamento teórico}
+\section{Theoretical background}
 
-\subsection{Muestreo y teorema de Nyquist}
+\subsection{Sampling and the Nyquist theorem}
 \label{sec:aliasing}
 
-Una señal analógica $x(t)$ se convierte en una secuencia discreta mediante el muestreo periódico \cite{oppenheim}:
+An analog signal $x(t)$ is converted into a discrete sequence through periodic sampling \cite{oppenheim}:
 
 \begin{equation}
 x[n] = x(nT_s)
 \end{equation}
 
-donde $T_s = 1/f_s$ es el periodo de muestreo. El teorema de muestreo de Nyquist establece que una señal puede reconstruirse sin pérdida de información únicamente si:
+where $T_s = 1/f_s$ is the sampling period. The Nyquist sampling theorem states that a signal can be reconstructed without loss of information only if:
 
 \begin{equation}
 f_s \geq 2 f_{\max}
 \end{equation}
 
-siendo $f_{\max}$ la frecuencia más alta presente en la señal. Cuando esta condición no se cumple, ocurre \textbf{aliasing}: las componentes de frecuencia superiores a $f_s/2$ (frecuencia de Nyquist) se ``pliegan'' y aparecen en la señal reconstruida como componentes de frecuencia distinta —típicamente más baja— a la real, de forma indistinguible de una componente genuina de esa frecuencia. La prevención estándar consiste en (a) elegir $f_s \geq 2f_{\max}$ y/o (b) aplicar un filtro analógico pasa-bajos anti-aliasing antes del muestreo, que atenúe el contenido por encima de $f_s/2$ que la tasa elegida no podrá representar correctamente.
+where $f_{\max}$ is the highest frequency present in the signal. When this condition is not met, \textbf{aliasing} occurs: components with frequency above $f_s/2$ (the Nyquist frequency) ``fold back'' and appear in the reconstructed signal as a component of a different — typically lower — frequency, indistinguishable from a genuine component at that frequency. The standard prevention consists of (a) choosing $f_s \geq 2f_{\max}$ and/or (b) applying an analog anti-aliasing low-pass filter before sampling, attenuating content above $f_s/2$ that the chosen rate cannot represent correctly.
 
-\subsection{Cuantización (algoritmo DAC)}
+\subsection{Quantization (DAC algorithm)}
 
-La cuantización aproxima cada muestra continua en amplitud a uno de $2^{b}$ niveles discretos, donde $b$ es el número de bits del convertidor. La función \texttt{quantize\_dac} de \texttt{signal\_tools/sampling.py} implementa este proceso normalizando la señal a $[0,1]$, redondeando al nivel más cercano de $2^b - 1$ intervalos, y reescalando de vuelta a $[-1,1]$:
+Quantization approximates each continuous-amplitude sample to one of $2^{b}$ discrete levels, where $b$ is the converter's bit depth. The \texttt{quantize\_dac} function in \texttt{signal\_tools/sampling.py} implements this process by normalizing the signal to $[0,1]$, rounding to the nearest of $2^b - 1$ intervals, and rescaling back to $[-1,1]$:
 
 \begin{equation}
 x_q[n] = \frac{\operatorname{round}\!\left(\dfrac{x[n]+1}{2}(2^b-1)\right)}{2^b-1}\cdot 2 - 1
 \end{equation}
 
-Un mayor número de bits reduce el error de cuantización pero requiere un convertidor de mayor resolución.
+A higher number of bits reduces the quantization error but requires a higher-resolution converter.
 
-\subsection{Transformada Rápida de Fourier}
+\subsection{Fast Fourier Transform}
 
-La FFT calcula eficientemente la Transformada Discreta de Fourier \cite{lyons}:
+The FFT efficiently computes the Discrete Fourier Transform \cite{lyons}:
 
 \begin{equation}
 X[k] = \sum_{n=0}^{N-1} x[n]\,e^{-j2\pi kn/N}
 \end{equation}
 
-Las funciones \texttt{dominant\_frequency} de \texttt{signal\_tools/csv\_signal.py} y \texttt{signal\_tools/audio\_fft.py} calculan el espectro de magnitud de un solo lado mediante \texttt{numpy.fft.rfft} \cite{numpy} normalizado por $N$, e identifican el pico de mayor magnitud excluyendo la componente en $0$ Hz (nivel DC).
+The \texttt{dominant\_frequency} functions in \texttt{signal\_tools/csv\_signal.py} and \texttt{signal\_tools/audio\_fft.py} compute the single-sided magnitude spectrum via \texttt{numpy.fft.rfft} \cite{numpy}, normalized by $N$, and identify the peak of highest magnitude excluding the $0$ Hz (DC) component.
 
-\subsection{Mecanismos de muestreo concurrente en un microcontrolador}
+\subsection{Concurrent sampling mechanisms on a microcontroller}
 
-En un microcontrolador de un solo núcleo (o cuando todo el trabajo se ejecuta en un solo hilo), cualquier operación bloqueante que se ejecute dentro del mismo bucle que realiza el muestreo retrasa directamente la siguiente muestra: el periodo de muestreo \emph{efectivo} deja de ser el periodo \emph{nominal} programado. El ESP32-WROOM, al ser un sistema de doble núcleo con soporte de FreeRTOS y temporizadores de hardware, permite dos estrategias para desacoplar el muestreo de una carga de cómputo concurrente:
+On a single-core microcontroller (or when all work runs on a single thread), any blocking operation executed within the same loop that performs sampling directly delays the next sample: the \emph{achieved} sampling period stops matching the \emph{nominal} programmed period. The ESP32-WROOM, being a dual-core system with FreeRTOS support and hardware timers, allows two strategies for decoupling sampling from a concurrent compute load:
 
 \begin{itemize}
-\item \textbf{Multihilo/multinúcleo}: fijar (\emph{pin}) una tarea de muestreo a un núcleo distinto del que ejecuta la carga de cómputo, de modo que ambos se ejecuten físicamente en paralelo.
-\item \textbf{Interrupciones}: usar un temporizador de hardware que dispare una rutina de servicio de interrupción (ISR) de forma independiente del código en ejecución en \texttt{loop()}, garantizando una referencia temporal exacta incluso si el procesamiento posterior de cada muestra se retrasa.
+\item \textbf{Multi-thread/multi-core}: pin a sampling task to a different core than the one running the compute load, so both execute in physical parallel.
+\item \textbf{Interrupts}: use a hardware timer that triggers an interrupt service routine (ISR) independently of whatever code is running in \texttt{loop()}, guaranteeing an exact timing reference even if the subsequent processing of each sample is delayed.
 \end{itemize}
 
-Estos dos mecanismos se contrastan en la Sección~\ref{sec:embebidos} frente al caso base de un único hilo bloqueante.
+These two mechanisms are contrasted against the single-threaded blocking baseline in Section~\ref{sec:embebidos}.

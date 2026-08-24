@@ -1,21 +1,21 @@
 % ============================================================
-% IV. RESULTADOS
+% IV. RESULTS
 % ============================================================
 
-\section{Resultados}
+\section{Results}
 
 \subsection{Item 1 — Muestra01.csv}
 
-La Fig.~\ref{fig:muestra01} muestra la señal completa en el tiempo y el espectro de cada uno de los cuatro segmentos de $0.05$ s. Las frecuencias dominantes obtenidas fueron:
+Fig.~\ref{fig:muestra01} shows the full signal in time and the spectrum of each of the four $0.05$ s segments. The dominant frequencies obtained were:
 
 \begin{table}[!t]
 \centering
-\caption{Frecuencia dominante por segmento de Muestra01.csv}
+\caption{Dominant frequency per segment of Muestra01.csv}
 \label{tab:muestra01}
 \small
 \begin{tabular}{@{}l r@{}}
 \toprule
-Segmento & $f_d$ (Hz) \\
+Segment & $f_d$ (Hz) \\
 \midrule
 1 & 1200.00 \\
 2 & 1600.00 \\
@@ -28,28 +28,28 @@ Segmento & $f_d$ (Hz) \\
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{muestra01_analisis.png}
-\caption{Señal completa de Muestra01.csv en el tiempo y espectro de cada uno de sus cuatro segmentos de $0.05$ s.}
+\caption{Full Muestra01.csv signal in time, and the spectrum of each of its four 0.05 s segments.}
 \label{fig:muestra01}
 \end{figure}
 
-Las cuatro frecuencias dominantes son distintas entre sí, lo que sugiere que la señal registrada no es estacionaria: su contenido espectral dominante cambia de un segmento de $0.05$ s al siguiente.
+The four dominant frequencies are all distinct from one another, suggesting that the recorded signal is not stationary: its dominant spectral content changes from one $0.05$ s segment to the next.
 
-\subsection{Item 2 — Muestreo, cuantización y aliasing}
+\subsection{Item 2 — Sampling, quantization, and aliasing}
 
-La Fig.~\ref{fig:muestreo_cuantizacion} muestra la señal seno original de $100$ Hz (línea punteada) junto con las muestras cuantizadas a $3$ bits para cada frecuencia de muestreo evaluada.
+Fig.~\ref{fig:muestreo_cuantizacion} shows the original 100 Hz sine (dotted line) alongside the 3-bit quantized samples for each evaluated sampling rate.
 
 \begin{table}[!t]
 \centering
-\caption{Resultado del muestreo del seno de 100 Hz}
+\caption{Result of sampling the 100 Hz sine}
 \label{tab:muestreo}
 \small
 \begin{tabular}{@{}r r l@{}}
 \toprule
-$f_s$ (Hz) & Muestras (0.05 s) & Condición de Nyquist \\
+$f_s$ (Hz) & Samples (0.05 s) & Nyquist condition \\
 \midrule
 70 & 4 & $f_s < 200$ Hz — \textbf{aliasing} \\
-500 & 25 & $f_s \geq 200$ Hz — sin aliasing \\
-1000 & 50 & $f_s \geq 200$ Hz — sin aliasing \\
+500 & 25 & $f_s \geq 200$ Hz — no aliasing \\
+1000 & 50 & $f_s \geq 200$ Hz — no aliasing \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -57,26 +57,26 @@ $f_s$ (Hz) & Muestras (0.05 s) & Condición de Nyquist \\
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{muestreo_cuantizacion.png}
-\caption{Señal seno de 100 Hz muestreada y cuantizada (3 bits) a 70, 500 y 1000 Hz. A 70 Hz las muestras son demasiado escasas para seguir la forma de onda real: el patrón muestreado es consistente con una frecuencia mucho menor a 100 Hz (aliasing).}
+\caption{100 Hz sine sampled and quantized (3 bits) at 70, 500, and 1000 Hz. At 70 Hz the samples are too sparse to follow the real waveform: the sampled pattern is consistent with a frequency much lower than 100 Hz (aliasing).}
 \label{fig:muestreo_cuantizacion}
 \end{figure}
 
-Con solo $4$ muestras en $0.05$ s, el muestreo a $70$ Hz no captura ni siquiera dos ciclos completos de la señal de $100$ Hz, y las muestras resultantes son compatibles con una señal de frecuencia mucho menor —el efecto de aliasing descrito en la Sección~\ref{sec:aliasing}. A $500$ y $1000$ Hz, con $5$ y $10$ muestras por ciclo respectivamente, la forma de onda queda claramente representada.
+With only $4$ samples in $0.05$ s, sampling at $70$ Hz fails to capture even two full cycles of the 100 Hz signal, and the resulting samples are consistent with a much lower-frequency signal — the aliasing effect described in Section~\ref{sec:aliasing}. At $500$ and $1000$ Hz, with $5$ and $10$ samples per cycle respectively, the waveform is clearly represented.
 
-\subsection{Item 3 — FFT de violín, tambor y gato}
+\subsection{Item 3 — FFT of violin, drum, and cat}
 
 \begin{table}[!t]
 \centering
-\caption{Resultados del análisis espectral (señal completa)}
+\caption{Spectral analysis results (full signal)}
 \label{tab:audio}
 \small
 \begin{tabular}{@{}l r r r@{}}
 \toprule
-Señal & $f_s$ (Hz) & Duración (s) & $f_d$ (Hz) \\
+Signal & $f_s$ (Hz) & Duration (s) & $f_d$ (Hz) \\
 \midrule
-Violín & 44100 & 2.00 & 385.50 \\
-Tambor & 44100 & 0.96 & 7596.10 \\
-Gato & 11025 & 1.58 & 1715.08 \\
+Violin & 44100 & 2.00 & 385.50 \\
+Drum & 44100 & 0.96 & 7596.10 \\
+Cat & 11025 & 1.58 & 1715.08 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -84,8 +84,8 @@ Gato & 11025 & 1.58 & 1715.08 \\
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{audio_fft_comparacion.png}
-\caption{Espectros de magnitud (FFT) del violín, el tambor y el gato, superpuestos.}
+\caption{Magnitude (FFT) spectra of the violin, drum, and cat recordings, overlaid.}
 \label{fig:audio_fft}
 \end{figure}
 
-Las tres frecuencias dominantes están claramente separadas entre sí: el violín concentra su energía en $385.50$ Hz (rango de una nota musical grave/media, coherente con la nota fundamental de una cuerda frotada), el gato en $1715.08$ Hz (coherente con el tono agudo de un maullido), y el tambor —de forma notable— en $7596.10$ Hz, muy por encima de lo que se esperaría de la frecuencia fundamental de un parche de tambor. Esto se debe a que el ataque de un tambor es un transitorio de banda ancha con energía significativa en armónicos altos y en el ruido del golpe, por lo que el pico de \emph{mayor magnitud} de su espectro no corresponde necesariamente a un tono fundamental grave perceptible, sino al contenido de alta frecuencia del transitorio de ataque —un punto que se retoma en la Discusión.
+The three dominant frequencies are clearly separated from one another: the violin concentrates its energy at $385.50$ Hz (a low/mid musical-note range, consistent with the fundamental of a bowed string), the cat at $1715.08$ Hz (consistent with the high pitch of a meow), and the drum — notably — at $7596.10$ Hz, far above what one would expect of a drumhead's fundamental frequency. This is because a drum attack is a broadband transient with significant energy in high harmonics and hit noise, so the peak of \emph{highest magnitude} in its spectrum does not necessarily correspond to a perceptible low fundamental tone, but rather to the high-frequency content of the attack transient — a point revisited in the Discussion. Item 4's results (ESP32-WROOM sampling precision) are presented separately in Section~\ref{sec:embebidos}.

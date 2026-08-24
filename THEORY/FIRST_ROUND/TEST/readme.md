@@ -46,13 +46,12 @@ TEST/
 │   ├── violin.wav
 │   ├── tambor.wav
 │   └── gato.wav
-├── firmware/                     Item 4: ESP32-WROOM sketches (untested on real hardware)
+├── firmware/                     Item 4: ESP32-WROOM sketches, flashed and captured on real hardware
 │   ├── esp32_a_busy_loop/
 │   ├── esp32_b_dualcore/
 │   ├── esp32_c_interrupt/
-│   ├── simulate_serial_output.py Timing-model-based simulated serial logs (labeled as simulated)
-│   ├── simulated_logs/
-│   └── README.md                 Wiring + theoretical timing/precision analysis
+│   ├── real_logs/                Raw Serial Monitor captures, 8 samples x 3 sketches x 3 N values
+│   └── README.md                 Wiring + measured timing/precision analysis
 ├── tests/
 │   ├── test_csv_signal.py
 │   ├── test_sampling.py
@@ -98,12 +97,12 @@ python main.py --show     # also open interactive plot windows
 
 ## Item 4 — Firmware
 
-No physical ESP32-WROOM or Arduino Uno was available to flash and measure.
-`firmware/README.md` documents the wiring, the three sketches, and a
-theoretical timing analysis; `firmware/simulate_serial_output.py` generates
-plausible serial-output logs from an explicit, documented timing model
-(labeled `SIMULATED` in every output file) rather than fabricating a fake
-hardware capture. See `report/secciones/embebidos.tex` for the write-up.
+All three sketches were flashed on a real ESP32-WROOM board and their serial
+output captured directly with the Arduino IDE's Serial Monitor (115200
+baud). `firmware/README.md` documents the wiring, the three sketches, and
+the measured timing/precision analysis; the raw captures (8 samples per
+sketch/`N` combination) are in `firmware/real_logs/`. See
+`report/secciones/embebidos.tex` for the write-up.
 
 ## Testing
 

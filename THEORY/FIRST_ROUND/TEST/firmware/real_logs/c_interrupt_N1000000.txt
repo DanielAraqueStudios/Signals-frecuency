@@ -1,0 +1,10 @@
+# Captured from Arduino IDE Serial Monitor (115200 baud), ESP32-WROOM
+# mechanism=c_interrupt SUM_LIMIT=1000000
+[isr] dt_ms=101 pot1=660 pot2=1525 pot3=565
+[isr] dt_ms=100 pot1=1930 pot2=3310 pot3=985
+[isr] dt_ms=101 pot1=2020 pot2=328 pot3=675
+[isr] dt_ms=100 pot1=2595 pot2=2140 pot3=1675
+[isr] dt_ms=100 pot1=2575 pot2=1960 pot3=2180
+[isr] dt_ms=100 pot1=2460 pot2=3749 pot3=2595
+[isr] dt_ms=101 pot1=598 pot2=78 pot3=3758
+[isr] dt_ms=100 pot1=822 pot2=605 pot3=1750

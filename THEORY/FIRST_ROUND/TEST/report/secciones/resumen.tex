@@ -1,19 +1,19 @@
 % ============================================================
-% RESUMEN
+% ABSTRACT
 % ============================================================
 
 \begin{abstract}
 
-Este informe documenta cuatro ejercicios de procesamiento digital de señales desarrollados en el proyecto \texttt{WORK\_FOUR} (paquete \texttt{signal\_tools}). En el primero se cargó y segmentó la señal registrada en \texttt{Muestra01.csv} ($f_s = 5000$ Hz, 1000 muestras, cuatro segmentos de $0.05$ s) y se calculó la frecuencia dominante de cada segmento mediante FFT. En el segundo se generó una señal seno de $100$ Hz, se digitalizó con tres frecuencias de muestreo ($70$, $500$ y $1000$ Hz), se cuantizó con un algoritmo DAC de 3 bits, y se ilustró el fenómeno de aliasing y su prevención. En el tercero se descargaron grabaciones reales de un violín, un tambor y un gato, se calculó su FFT y se evaluó si el análisis de frecuencias permite diferenciarlos. En el cuarto se diseñó firmware mínimo para un ESP32-WROOM que compara tres mecanismos de muestreo periódico (bucle bloqueante de un solo hilo, tarea en el núcleo 0 con el núcleo 1 libre, y muestreo por interrupción de temporizador de hardware) frente a una carga de cómputo variable (suma de $1$ a $10\,000\,000$, $1\,000\,000$ y $100\,000\,000$); al no disponerse de hardware físico, esta sección se apoya en un modelo de temporización documentado y en una simulación etiquetada explícitamente como tal, en lugar de datos de serie reales. Todo el código, las pruebas automatizadas y los resultados de este informe están disponibles en el repositorio público \url{https://github.com/DanielAraqueStudios/Signals-frecuency}.
+This report documents four digital signal processing exercises developed in the \texttt{TEST} project (\texttt{signal\_tools} package, \texttt{THEORY/FIRST\_ROUND/TEST}). In the first, the signal recorded in \texttt{Muestra01.csv} was loaded and segmented ($f_s = 5000$ Hz, 1000 samples, four segments of $0.05$ s each), and the dominant frequency of each segment was computed via FFT. In the second, a 100 Hz sine wave was generated, digitized at three sampling rates ($70$, $500$, and $1000$ Hz), quantized with a 3-bit DAC-style algorithm, and used to illustrate aliasing and how to prevent it. In the third, real recordings of a violin, a drum, and a cat were analyzed, their FFT computed, and the frequency-based separability of the three sources evaluated. In the fourth, minimal firmware was written for an ESP32-WROOM board comparing three periodic-sampling mechanisms (single-threaded busy loop, a dual-core task with the second core free, and hardware-timer-interrupt sampling) against a variable compute load (a summation from $1$ to $10{,}000{,}000$, $1{,}000{,}000$, and $100{,}000{,}000$); all three sketches were flashed on a real ESP32-WROOM board and their serial output captured directly (\texttt{firmware/real\_logs/}). All code, the automated test suite, and the results in this report are available in the public repository at \url{https://github.com/DanielAraqueStudios/Signals-frecuency}.
 
 \end{abstract}
 
 % ============================================================
-% PALABRAS CLAVE
+% KEYWORDS
 % ============================================================
 
 \begin{IEEEkeywords}
 
-Muestreo, aliasing, cuantización, Transformada Rápida de Fourier, FFT, ESP32, FreeRTOS, interrupciones de hardware, procesamiento digital de señales.
+Sampling, aliasing, quantization, Fast Fourier Transform, FFT, ESP32, FreeRTOS, hardware interrupts, digital signal processing.
 
 \end{IEEEkeywords}

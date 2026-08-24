@@ -1,48 +1,51 @@
 % ============================================================
-% V. ITEM 4 — PRECISIÓN DE MUESTREO EN ESP32-WROOM
+% V. ITEM 4 — SAMPLING PRECISION ON AN ESP32-WROOM
 % ============================================================
 
-\section{Precisión de muestreo en ESP32-WROOM}
+\section{Sampling precision on an ESP32-WROOM}
 \label{sec:embebidos}
 
-Como se describe en la Sección~\ref{sec:metodologia-embebidos}, esta sección se basa en una \textbf{simulación etiquetada}, generada por \texttt{firmware/simulate\_serial\_output.py} a partir de un modelo de temporización explícito (velocidad de suma $\approx 2\times10^{7}$ sumas/s, \emph{jitter} de FreeRTOS $\pm2$ ms, \emph{jitter} de temporizador de hardware $\pm1$ ms), y \textbf{no} de una captura de puerto serie real, al no disponerse de un ESP32-WROOM físico para flashear los tres sketches de \texttt{firmware/}.
+As described in Section~\ref{sec:metodologia-embebidos}, the three sketches in \texttt{firmware/} were flashed on a real ESP32-WROOM board and their serial output captured directly with the Arduino IDE's Serial Monitor (115200 baud); the full raw captures (eight samples per sketch/$N$ combination) are in \texttt{firmware/real\_logs/*.txt}.
 
 \begin{table}[!t]
 \centering
-\caption{Periodo de muestreo simulado promedio (8 muestras) por mecanismo}
+\caption{Measured average sampling period (8 samples) per mechanism}
 \label{tab:embebidos}
 \small
 \begin{tabular}{@{}l r r@{}}
 \toprule
-Mecanismo & $N$ (suma) & $\overline{dt}$ (ms) \\
+Mechanism & $N$ (sum) & $\overline{dt}$ (ms) \\
 \midrule
-4(a) bucle bloqueante & 1\,000\,000 & 150.0 \\
-4(a) bucle bloqueante & 10\,000\,000 & 599.9 \\
-4(a) bucle bloqueante & 100\,000\,000 & 5100.1 \\
+4(a) busy loop & 1\,000\,000 & 150.0 \\
+4(a) busy loop & 10\,000\,000 & 600.1 \\
+4(a) busy loop & 100\,000\,000 & 5100.4 \\
 \midrule
-4(b) doble núcleo & 1\,000\,000 & 100.2 \\
-4(b) doble núcleo & 10\,000\,000 & 99.6 \\
-4(b) doble núcleo & 100\,000\,000 & 99.8 \\
+4(b) dual core & 1\,000\,000 & 100.4 \\
+4(b) dual core & 10\,000\,000 & 99.8 \\
+4(b) dual core & 100\,000\,000 & 100.0 \\
 \midrule
-4(c) interrupción & 1\,000\,000 & 100.4 \\
-4(c) interrupción & 10\,000\,000 & 150.0 \\
-4(c) interrupción & 100\,000\,000 & 712.7 \\
+4(c) interrupt & 1\,000\,000 & 100.4 \\
+4(c) interrupt & 10\,000\,000 & 150.0$^{*}$ \\
+4(c) interrupt & 100\,000\,000 & 712.8$^{*}$ \\
 \bottomrule
 \end{tabular}
+
+\vspace{2pt}
+{\footnotesize $^{*}$Average includes one sample where \texttt{loop()} caught up on a backlog after falling behind the ISR (\texttt{dt\_ms=499} at $N$=10M, \texttt{dt\_ms=5001} at $N$=100M); the other seven samples in each run stayed near 100 ms.}
 \end{table}
 
-\subsection{Efecto sobre la frecuencia de muestreo}
+\subsection{Effect on the sampling period}
 
-El mecanismo 4(a) es el único de los tres en el que el periodo de muestreo efectivo escala de forma prácticamente lineal con $N$: pasa de $\sim\!150$ ms ($N=10^6$) a $\sim\!5.1$ s ($N=10^8$), muy lejos del periodo nominal de $100$ ms, porque la suma y el muestreo comparten el mismo hilo bloqueante. El mecanismo 4(b) mantiene el periodo nominal ($\sim\!100$ ms $\pm$ \emph{jitter} de planificación) prácticamente constante para los tres valores de $N$, porque la tarea de muestreo corre en un núcleo físicamente distinto al de la suma. El mecanismo 4(c) mantiene la referencia temporal exacta del temporizador de hardware, pero el promedio de las muestras \emph{procesadas} por \texttt{loop()} se ve inflado para $N$ grande por la muestra ``atrasada'' que acumula el retraso de procesamiento —una distinción importante entre \emph{cuándo ocurre la interrupción} (exacto) y \emph{cuándo \texttt{loop()} logra atenderla} (retrasado si la suma es larga).
+Mechanism 4(a) is the only one of the three whose effective sampling period scales almost linearly with $N$: it grows from $150$ ms ($N=10^6$) to $600$ ms ($N=10^7$) to $5100$ ms ($N=10^8$), far from the nominal $100$ ms period, because the summation and sampling share the same blocking thread. Mechanism 4(b) keeps the nominal period essentially constant across all three values of $N$ ($100.4$/$99.8$/$100.0$ ms, individual samples ranging only $98$–$102$ ms), because the sampling task runs on a core physically separate from the summation. Mechanism 4(c) keeps the hardware timer's timing reference exact — seven of the eight printed samples per run stay near $100$ ms in every capture — but one sample per run at $N=10^7$ and $N=10^8$ shows \texttt{loop()} catching up on an accumulated backlog: an important distinction between \emph{when the interrupt fires} (exact) and \emph{when \texttt{loop()} manages to process it} (delayed if the summation is long).
 
-\subsection{¿Cuál mecanismo es más preciso?}
+\subsection{Which mechanism is more precise?}
 
-Con base en el modelo simulado, el orden de precisión del \emph{periodo de muestreo alcanzado} (no solo de la referencia temporal) es:
+Based on the captured data, the ranking of \emph{achieved sampling period} precision (not just timing reference) is:
 
 \begin{equation}
-\text{4(b) doble núcleo} \;>\; \text{4(c) interrupción} \;>\; \text{4(a) bucle bloqueante}
+\text{4(b) dual core} \;>\; \text{4(c) interrupt} \;>\; \text{4(a) busy loop}
 \end{equation}
 
-El mecanismo de \textbf{doble núcleo (4b)} es el más preciso en términos prácticos: al ejecutar el muestreo y la carga de cómputo en núcleos físicamente separados, el periodo de muestreo efectivo permanece cercano al nominal independientemente de $N$. El mecanismo de \textbf{interrupción (4c)} ofrece la referencia temporal más exacta de los tres a nivel de hardware —el temporizador dispara exactamente cada $100$ ms sin importar qué esté haciendo \texttt{loop()}—, pero como el propio \texttt{loop()} debe procesar cada muestra (leer los potenciómetros e imprimir), una suma suficientemente larga ($N=10^8$) provoca que el procesamiento se atrase y varias interrupciones se acumulen antes de ser atendidas, degradando la precisión \emph{observada} aunque no la del disparo del temporizador en sí. El \textbf{bucle bloqueante (4a)} es, sin ambigüedad, el menos preciso: la suma bloqueante retrasa directamente cada muestra, de forma proporcional a $N$, sin ningún mecanismo que lo evite.
+The \textbf{dual-core mechanism (4b)} is the most precise in practical terms: by running sampling and the compute load on physically separate cores, the effective sampling period stays close to nominal regardless of $N$ — the tightest and most consistent result across all three values of $N$ in the captured data. The \textbf{interrupt mechanism (4c)} offers the most exact hardware-level timing reference of the three — the timer fires exactly every $100$ ms regardless of what \texttt{loop()} is doing — but because \texttt{loop()} itself must process each sample (read the potentiometers and print), a sufficiently long summation ($N=10^7$, $N=10^8$) causes processing to fall behind and several interrupts to accumulate before being serviced, degrading the \emph{observed} precision even though the timer's own firing is unaffected. The \textbf{busy loop (4a)} is unambiguously the least precise: the blocking summation directly delays every sample, proportionally to $N$, with no mechanism preventing it — exactly as measured.
 
-En síntesis: si el requisito es una frecuencia de muestreo constante y predecible independientemente de la carga de cómputo, el mecanismo de doble núcleo es la opción más robusta; si el requisito es una referencia temporal exacta con la posibilidad de procesar cada evento algo más tarde (tolerando cierta latencia de procesamiento, no de disparo), la interrupción de hardware es preferible sobre el bucle bloqueante, y ambas alternativas evitan por completo la degradación lineal que sufre el mecanismo de un solo hilo.
+In summary: if the requirement is a constant, predictable sampling rate independent of compute load, the dual-core mechanism is the most robust choice; if the requirement is an exact timing reference with some tolerance for delayed processing of individual events (not delayed triggering), the hardware interrupt is preferable to the busy loop, and both alternatives avoid entirely the linear degradation suffered by the single-threaded mechanism.

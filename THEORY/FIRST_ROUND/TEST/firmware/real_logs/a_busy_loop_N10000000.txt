@@ -1,0 +1,10 @@
+# Captured from Arduino IDE Serial Monitor (115200 baud), ESP32-WROOM
+# mechanism=a_busy_loop SUM_LIMIT=10000000
+dt_ms=601 pot1=210 pot2=2260 pot3=2010
+dt_ms=600 pot1=845 pot2=715 pot3=3460
+dt_ms=599 pot1=770 pot2=1795 pot3=1910
+dt_ms=600 pot1=220 pot2=1630 pot3=3440
+dt_ms=600 pot1=2285 pot2=55 pot3=1310
+dt_ms=601 pot1=2790 pot2=2280 pot3=1280
+dt_ms=600 pot1=2760 pot2=840 pot3=765
+dt_ms=600 pot1=2945 pot2=2820 pot3=2170
