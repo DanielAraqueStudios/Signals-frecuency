@@ -1,0 +1,15 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+# MQTT is not HTTP, so this service needs Railway's TCP Proxy (Settings ->
+# Networking -> TCP Proxy) pointed at container port 8883, rather than the
+# default HTTP domain -- see ../../docs/deployment-railway.md.
+#
+# certs/server.crt, certs/server.key, certs/ca.crt, and config/passwd must
+# be supplied as a Railway volume or injected via a deploy-time script;
+# they are never committed to this repo (see certs/README.md).

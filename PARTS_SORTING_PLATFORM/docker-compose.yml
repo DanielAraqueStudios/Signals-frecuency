@@ -1,0 +1,126 @@
+# Local dev stack for the parts-sorting platform. Brings up everything
+# except the mobile app (run separately: `cd mobile-app && npx expo start`)
+# and MinIO's bucket creation, which api-gateway does itself at startup.
+#
+# First run:
+#   bash scripts/gen-dev-certs.sh      # TLS certs + classification-service's MQTT password
+#   bash scripts/gen-dev-jwt-keys.sh   # RSA keypair for JWT signing/verification
+#   docker compose up --build
+#
+# See README.md and docs/architecture.md for what each service does.
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: parts_sorting
+    # No host port published: only auth-service/api-gateway need it, over
+    # the internal network (postgres:5432) -- this also sidesteps a
+    # common collision with a Postgres already running on the host. If
+    # you need host-side psql access for debugging, add "5432:5432" back
+    # (or a non-default host port like "55432:5432") yourself.
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # web console
+    volumes:
+      - minio_data:/data
+
+  mqtt-broker:
+    build: ./mqtt-broker
+    ports:
+      - "8883:8883"   # MQTTS
+      - "8884:8884"   # MQTT over WebSockets (TLS)
+    volumes:
+      - ./mqtt-broker/certs:/mosquitto/certs:ro
+      # File-to-file bind mount (not the whole config/ dir) so this
+      # doesn't shadow mosquitto.conf/acl.conf, which are baked into the
+      # image at build time -- see mqtt-broker/Dockerfile.
+      - ./mqtt-broker/config/passwd:/mosquitto/config/passwd
+
+  auth-service:
+    build: ./services/auth-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/parts_sorting
+      JWT_PRIVATE_KEY_FILE: /secrets/jwt-private.pem
+      JWT_PUBLIC_KEY_FILE: /secrets/jwt-public.pem
+    volumes:
+      - ./.dev-secrets:/secrets:ro
+    ports:
+      - "8001:8000"
+
+  classification-service:
+    build: ./services/classification-service
+    depends_on:
+      - mqtt-broker
+    environment:
+      MQTT_BROKER_HOST: mqtt-broker
+      MQTT_BROKER_PORT: "8883"
+      MQTT_CA_CERT: /certs/ca.crt
+      MQTT_USERNAME: classification-service
+      # Matches the dev password scripts/gen-dev-certs.sh sets for this
+      # exact user -- change both together if you regenerate certs with a
+      # different password.
+      MQTT_PASSWORD: devpassword
+    volumes:
+      - ./mqtt-broker/certs:/certs:ro
+      # Uncomment once you have a real trained model (see
+      # services/classification-service/model/README.md):
+      # - ./services/classification-service/model/weights:/app/model/weights:ro
+    ports:
+      - "8002:8000"
+
+  api-gateway:
+    build: ./services/api-gateway
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      classification-service:
+        condition: service_started
+      mqtt-broker:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/parts_sorting
+      AUTH_SERVICE_URL: http://auth-service:8000
+      JWT_PUBLIC_KEY_FILE: /secrets/jwt-public.pem
+      CLASSIFICATION_SERVICE_URL: http://classification-service:8000
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_BUCKET: parts-sorting-images
+      MQTT_BROKER_HOST: mqtt-broker
+      MQTT_BROKER_PORT: "8883"
+      # Same host path as mqtt-broker's passwd bind mount above, so a
+      # newly-paired device's credential actually lands where mqtt-broker
+      # will read it after a restart (see services/api-gateway/README.md's
+      # "MQTT credential provisioning" section for that limitation).
+      MQTT_PASSWD_FILE_PATH: /mqtt-config/passwd
+    volumes:
+      - ./.dev-secrets:/secrets:ro
+      - ./mqtt-broker/config:/mqtt-config
+    ports:
+      - "8000:8000"
+
+volumes:
+  pg_data:
+  minio_data:

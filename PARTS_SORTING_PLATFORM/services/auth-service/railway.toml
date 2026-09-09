@@ -1,0 +1,14 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/healthz"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+# Required environment variables (set in the Railway service settings, never
+# committed here): DATABASE_URL (Railway's Postgres plugin sets this
+# automatically if attached), JWT_PRIVATE_KEY, JWT_PUBLIC_KEY (PEM strings,
+# see ../../docs/deployment-railway.md for how to generate and inject them).

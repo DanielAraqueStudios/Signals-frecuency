@@ -16,8 +16,9 @@ folder with its own README, dependencies, and tests, grouped under a
 | Desktop GUI          | PyQt6, customtkinter, Matplotlib (embedded plots) |
 | Testing              | pytest                              |
 | Audio I/O            | `winsound` (stdlib, Windows), librosa/soundfile, scipy.io.wavfile |
-| Embedded             | ESP32-WROOM / Arduino Uno (C++, FreeRTOS) |
+| Embedded             | ESP32-WROOM / ESP32-S3 / Arduino Uno (C++, FreeRTOS) |
 | Reporting            | LaTeX (IEEEtran) |
+| IoT platform          | FastAPI, ONNX Runtime, Mosquitto (MQTT/TLS), PostgreSQL, Expo/React Native, Docker, Railway |
 | Tooling              | Git, claude-flow (dev-agent tooling; not part of the shipped projects) |
 
 ## Repository Structure
@@ -28,9 +29,11 @@ folder with its own README, dependencies, and tests, grouped under a
       - [`WORK_ONE/`](THEORY/FIRST_ROUND/WORK/WORK_ONE/) — DTMF Dialer
       - [`WORK_TWO/`](THEORY/FIRST_ROUND/WORK/WORK_TWO/) — Fourier Square-Wave Sampling
       - [`WORK_THREE/`](THEORY/FIRST_ROUND/WORK/WORK_THREE/) — Sampling & Spectral Analysis Lab
+      - [`WORK_FOUR/`](THEORY/FIRST_ROUND/WORK/WORK_FOUR/) — Discrete Convolution Lab
     - [`TEST/`](THEORY/FIRST_ROUND/TEST/) — Sampling, Quantization, Audio FFT & Embedded Timing
 - [`LAB_TESTING/`](LAB_TESTING/)
-  - [`LAB1/`](LAB_TESTING/LAB1/) — Digitalización de señales y aliasing (STM32)
+  - [`LAB1/`](LAB_TESTING/LAB1/) — Digitalización de señales y aliasing (ESP32-WROOM)
+- [`PARTS_SORTING_PLATFORM/`](PARTS_SORTING_PLATFORM/) — Parts-Sorting IoT Platform (ESP32-S3, MQTT/TLS, JWT auth, ML classification)
 - [`Readme.md`](Readme.md) — this file, the repository index
 - [`.gitignore`](.gitignore)
 
@@ -82,6 +85,19 @@ with every figure and result table generated from the actual pipeline.
 **Entry points:** `python main.py` (sampling/Fourier demo) · `python run_animal_gui.py` (GUI) · `report/main.tex` (report)
 **Full docs:** [`readme.md`](THEORY/FIRST_ROUND/WORK/WORK_THREE/readme.md)
 
+### [`THEORY/FIRST_ROUND/WORK/WORK_FOUR/` — Discrete Convolution Lab](THEORY/FIRST_ROUND/WORK/WORK_FOUR/readme.md)
+
+Convolves a real audio recording (the "gato" sample reused from WORK_THREE)
+with a series of short discrete kernels — a 50/50 zeros-then-ones step at
+two sizes (10 and 100) and an explicit trapezoidal ramp — printing the
+numeric results and plotting input/kernel/output for each. A direct-sum
+`manual_convolve` (matches the textbook definition) is checked against
+`numpy.convolve` in tests; no LaTeX report, just code, numbers, and figures.
+
+**Stack:** NumPy · Matplotlib · librosa · pytest
+**Entry point:** `python main.py`
+**Full docs:** [`readme.md`](THEORY/FIRST_ROUND/WORK/WORK_FOUR/readme.md)
+
 ### [`THEORY/FIRST_ROUND/TEST/` — Sampling, Quantization, Audio FFT & Embedded Timing](THEORY/FIRST_ROUND/TEST/readme.md)
 
 A Python package covering four exercises: loading and segmenting a recorded
@@ -100,20 +116,42 @@ serial-captured firmware timing.
 
 ### [`LAB_TESTING/LAB1/` — Digitalización de señales y aliasing](LAB_TESTING/LAB1/readme.md)
 
-A complete signal-digitization system for a 32-bit microcontroller (STM32
-Nucleo-64): periodic-signal sampling at 500 Hz (12-bit ADC, timer-ISR
-driven), two reconstruction methods (onboard DAC and PWM + external
-low-pass filter), sensor digitization (6-channel I2C IMU and an
-encoder/DC-motor, both at 200 Hz), and the optional aliasing exercise.
-Includes an efficient binary-framed PC-side logger (no live plotting, per
-the assignment) and MATLAB scripts for the FFT/statistics tables the lab
-guide requires. No physical hardware was available to build this, so the
-report's result tables are honestly marked pending real capture rather
-than fabricated.
+A complete signal-digitization system for a 32-bit microcontroller
+(ESP32-WROOM — the lab guide names an STM32 for one stage, ported to
+ESP32 as the board actually available): periodic-signal sampling at
+500 Hz (12-bit ADC, timer-ISR driven), two reconstruction methods
+(onboard 8-bit DAC and PWM + external low-pass filter), sensor
+digitization (a BME280 pressure/temperature/humidity sensor — swapped in
+for the guide's original IMU, since that's the sensor actually available
+— and an encoder/DC-motor, at 100 Hz and 200 Hz respectively), and the
+optional aliasing exercise. Includes an efficient binary-framed PC-side
+logger (no live plotting, per the assignment) and MATLAB scripts for the
+FFT/statistics tables the lab guide requires. No physical hardware was
+available to build this, so the report's result tables are honestly
+marked pending real capture rather than fabricated.
 
-**Stack:** STM32duino (C++) · Python (`pyserial`) · pytest · MATLAB · LaTeX
+**Stack:** Arduino-ESP32 core 3.x (C++) · Python (`pyserial`) · pytest · MATLAB · LaTeX
 **Entry points:** `firmware/*/*.ino` (flash per stage) · `pc_logger/serial_logger.py` (capture) · `matlab/*.m` (analysis) · `report/main.tex` (report, en español)
 **Full docs:** [`readme.md`](LAB_TESTING/LAB1/readme.md)
+
+### [`PARTS_SORTING_PLATFORM/` — Parts-Sorting IoT Platform](PARTS_SORTING_PLATFORM/readme.md)
+
+An ESP32-S3 + MQTT/TLS microservices system: a worker logs into a mobile
+app (JWT auth), photographs a small hardware part (bolt, screw, nut,
+washer, ...) on a conveyor belt, and a backend microservice classifies it
+(ONNX Runtime — honest stub mode until a real trained model exists, since
+no labeled dataset does yet) and echoes the result to the worker's paired
+ESP32-S3 over MQTT/TLS. Three FastAPI microservices (auth, API gateway,
+classification), a TLS-only Mosquitto broker with per-device ACLs, Arduino
+firmware, and an Expo/React Native mobile app — all built, individually
+tested (30 passing tests), and also run together end-to-end against the
+real docker-compose stack (register → login → pair device → classify →
+MQTT delivery, verified live, not just unit-tested). Deploys to Railway;
+see its docs for the per-service setup.
+
+**Stack:** FastAPI · ONNX Runtime · Mosquitto (MQTT/TLS) · PostgreSQL · Arduino-ESP32 core 3.x (C++) · Expo/React Native (TypeScript) · Docker · Railway
+**Entry points:** `docker-compose.yml` (full local stack) · `services/*/README.md` (per-service) · `firmware/esp32s3_result_display/` · `mobile-app/`
+**Full docs:** [`readme.md`](PARTS_SORTING_PLATFORM/readme.md) · [`docs/architecture.md`](PARTS_SORTING_PLATFORM/docs/architecture.md)
 
 > More projects will be added here as new exercises are completed, each
 > following the same pattern: its own folder, its own README, linked above.
