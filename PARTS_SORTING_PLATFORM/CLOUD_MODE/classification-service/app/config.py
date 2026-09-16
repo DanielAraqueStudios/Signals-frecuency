@@ -18,10 +18,10 @@ class Settings(BaseSettings):
     # model_config field names below; this opts back out of that check.
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", protected_namespaces=())
 
-    # ONNX Runtime model. If model_path does not exist at startup, infer.py
-    # runs in stub mode -- see app/infer.py.
-    model_path: str = "model/weights/model.onnx"
-    labels_path: str = "model/labels.json"
+    # Frequency-spectrum classifier (services/shared/spectrum_classifier.py).
+    # If labels_config_path has no classes with reference_features, the
+    # service runs in stub mode -- see that module's docstring.
+    labels_config_path: str = "model/labels_config.json"
 
     # MQTT (TLS) -- matches ../../mqtt-broker/README.md's topic scheme and
     # connection parameters. mqtt_ca_cert may be either a filesystem path to

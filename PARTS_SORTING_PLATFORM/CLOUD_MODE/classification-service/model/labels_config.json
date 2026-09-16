@@ -1,0 +1,4 @@
+{
+  "_comment": "PLACEHOLDER. No reference spectrum profiles exist yet -- classification-service runs in stub mode until this has real entries. To calibrate: take a handful of reference photos per part type, run services/shared/spectrum_classifier.extract_features() on each, average the resulting [low, mid, high] band vectors per class, and put those in reference_features below.",
+  "classes": {}
+}

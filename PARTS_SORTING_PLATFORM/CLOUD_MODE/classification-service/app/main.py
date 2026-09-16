@@ -1,6 +1,7 @@
 """classification-service: receives a part photo from api-gateway,
-classifies it (ONNX Runtime, or honest stub mode -- see app/infer.py),
-publishes the result to the given MQTT topic, and returns the same JSON.
+classifies it via frequency-spectrum extraction (or honest stub mode --
+see services/shared/spectrum_classifier.py), publishes the result to the
+given MQTT topic, and returns the same JSON.
 """
 
 from __future__ import annotations
@@ -9,13 +10,14 @@ import logging
 
 from fastapi import FastAPI, File, Form, UploadFile
 
-from app.infer import build_classifier
+from app.config import settings
 from app.mqtt_publisher import publish_result
+from shared.spectrum_classifier import build_classifier
 
 logger = logging.getLogger("classification-service")
 
 app = FastAPI(title="classification-service")
-classifier = build_classifier()
+classifier = build_classifier(settings.labels_config_path)
 
 
 @app.get("/healthz")
@@ -26,7 +28,7 @@ def healthz() -> dict:
 @app.post("/classify")
 async def classify(topic: str = Form(default=""), file: UploadFile = File(...)) -> dict:
     image_bytes = await file.read()
-    result = classifier.infer(image_bytes)
+    result = classifier.classify(image_bytes)
 
     # topic is "" when api-gateway has no paired device for this upload
     # (device_id was omitted) -- a worker can classify a photo with no

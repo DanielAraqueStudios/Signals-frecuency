@@ -1,0 +1,4 @@
+{
+  "_comment": "PLACEHOLDER. No reference spectrum profiles exist yet -- local-server runs in stub mode until this has real entries. Same format/calibration process as CLOUD_MODE/classification-service/model/labels_config.json, kept as a separate file since the two deployments may end up classifying different part sets.",
+  "classes": {}
+}

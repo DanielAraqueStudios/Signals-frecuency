@@ -1,13 +1,19 @@
-# Local dev stack for the parts-sorting platform. Brings up everything
-# except the mobile app (run separately: `cd mobile-app && npx expo start`)
-# and MinIO's bucket creation, which api-gateway does itself at startup.
+# Local dev stack for the CLOUD deployment mode of the parts-sorting
+# platform (Railway-style: JWT auth + MQTT/TLS). Run from CLOUD_MODE/.
+# Brings up everything except the mobile app (run separately:
+# `cd ../mobile-app && npx expo start`) and MinIO's bucket creation, which
+# api-gateway does itself at startup.
 #
-# First run:
+# First run (from CLOUD_MODE/):
 #   bash scripts/gen-dev-certs.sh      # TLS certs + classification-service's MQTT password
 #   bash scripts/gen-dev-jwt-keys.sh   # RSA keypair for JWT signing/verification
 #   docker compose up --build
 #
-# See README.md and docs/architecture.md for what each service does.
+# classification-service's build context is the repo root (..) rather
+# than this folder, because it needs ../shared/spectrum_classifier.py --
+# see its Dockerfile. See README.md and ../docs/architecture.md for what
+# each service does. LOCAL_MODE/ is a separate, independent deployment
+# (no auth, no MQTT, plain HTTP) -- see ../LOCAL_MODE/README.md.
 
 services:
   postgres:
@@ -54,7 +60,7 @@ services:
       - ./mqtt-broker/config/passwd:/mosquitto/config/passwd
 
   auth-service:
-    build: ./services/auth-service
+    build: ./auth-service
     depends_on:
       postgres:
         condition: service_healthy
@@ -68,7 +74,12 @@ services:
       - "8001:8000"
 
   classification-service:
-    build: ./services/classification-service
+    # Build context is the repo root (one level up from CLOUD_MODE/) so
+    # the Dockerfile can COPY ../shared into the image -- see
+    # classification-service/Dockerfile.
+    build:
+      context: ..
+      dockerfile: CLOUD_MODE/classification-service/Dockerfile
     depends_on:
       - mqtt-broker
     environment:
@@ -82,14 +93,14 @@ services:
       MQTT_PASSWORD: devpassword
     volumes:
       - ./mqtt-broker/certs:/certs:ro
-      # Uncomment once you have a real trained model (see
-      # services/classification-service/model/README.md):
-      # - ./services/classification-service/model/weights:/app/model/weights:ro
+      # Uncomment once you have real reference spectrum profiles (see
+      # classification-service/model/README.md):
+      # - ./classification-service/model/labels_config.json:/app/model/labels_config.json:ro
     ports:
       - "8002:8000"
 
   api-gateway:
-    build: ./services/api-gateway
+    build: ./api-gateway
     depends_on:
       postgres:
         condition: service_healthy

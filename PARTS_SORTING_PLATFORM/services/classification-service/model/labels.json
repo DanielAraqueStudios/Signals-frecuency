@@ -1,5 +1,0 @@
-{
-  "_comment": "PLACEHOLDER class list. Replace with your real part classes (matching the data/<class_name>/ subfolder names) before running model/train.py. Order matters: it must match the classifier head's output index order, which model/train.py derives alphabetically from the data/ subfolders -- so keep this list sorted the same way.",
-  "input_size": 224,
-  "classes": ["bolt", "nut", "screw", "washer"]
-}

@@ -24,7 +24,8 @@ def test_classify_returns_stub_response_and_publishes_it(client, sample_jpeg_byt
         "label": "unclassified",
         "confidence": None,
         "stub": True,
-        "reason": "no trained model present",
+        "reason": "no reference spectrum profiles configured",
+        "features": None,
     }
 
     client.mock_publish.assert_called_once_with("results/device-testABC", body)
