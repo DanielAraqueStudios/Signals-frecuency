@@ -1,0 +1,39 @@
+% ============================================================
+% I. INTRODUCCIÓN
+% ============================================================
+
+\section{Introducción}
+
+El presente informe reúne los diez ejercicios prácticos de la primera
+ronda del curso de Señales y Sistemas, agrupados originalmente en las
+carpetas \texttt{WORK\_ONE} a \texttt{WORK\_TEN} del repositorio. Cada
+carpeta implementa, de forma independiente y con su propia suite de
+pruebas automatizadas, uno o más de los ejercicios propuestos en el
+enunciado de la tarea: análisis espectral de audio, series de Fourier,
+convolución discreta, señales de modulación de amplitud y aliasing,
+transformada wavelet, transformada de Hilbert, filtros digitales de
+promedio, y diseño manual de filtros IIR mediante la transformada
+bilineal, entre otros.
+
+En lugar de un único desarrollo monolítico, se optó por mantener la
+estructura modular ya existente en el repositorio (un paquete Python por
+tarea, con su propio \texttt{main.py}, pruebas y \texttt{readme.md}) y
+consolidar aquí únicamente los resultados: por cada carpeta se incluye
+una subsección con el objetivo del ejercicio, la metodología empleada, y
+las figuras y valores numéricos obtenidos al ejecutar el código
+correspondiente. Las figuras mostradas en este documento son, en su
+totalidad, salidas reales de los scripts de cada carpeta (o, en el caso
+puntual de \texttt{WORK\_ONE}, un análisis FFT ad-hoc pero igualmente
+real sobre audio generado por el propio proyecto, dado que esa carpeta no
+incluye un módulo de graficado propio).
+
+La Sección~\ref{sec:resultados} presenta los resultados de cada una de
+las diez carpetas, en el mismo orden en que fueron desarrolladas. La
+Sección~\ref{sec:conclusiones} sintetiza las observaciones transversales
+más relevantes entre ejercicios.
+
+El código fuente completo de los diez ejercicios (implementación, pruebas
+unitarias y scripts que generan cada una de las figuras de este informe)
+está disponible públicamente en
+\url{https://github.com/DanielAraqueStudios/Signals-frecuency}, bajo
+\texttt{THEORY/FIRST\_ROUND/WORK/}.

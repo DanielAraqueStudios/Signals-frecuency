@@ -1,0 +1,52 @@
+% ============================================================
+% WORK_SEVEN: Filtro de media móvil (Tarea 3-C)
+% ============================================================
+
+\subsection{WORK\_SEVEN: Filtro de media móvil (promedio deslizante)}
+
+Esta sección implementa la Tarea 3-C: un filtro pasa-bajas FIR de media móvil (boxcar), dimensionado a partir de una frecuencia de corte objetivo, aplicado a señales senoidales, cuadradas y a audio real de gato, comparando el resultado antes y después del filtrado en el dominio del tiempo y en frecuencia (FFT).
+
+El filtro de media móvil se define como
+\begin{equation}
+y[n] = \frac{1}{N}\sum_{k=0}^{N-1} x[n-k],
+\end{equation}
+implementado mediante convolución en modo \texttt{"same"} para preservar la longitud de la señal. Su respuesta en frecuencia corresponde a un núcleo de Dirichlet (sinc periódica), cuyo punto de $-3$dB se aproxima mediante $f_c \approx 0.443 \cdot f_s / N$ (Smith, \emph{The Scientist and Engineer's Guide to DSP}, cap.\ 15), de modo que la longitud de ventana se obtiene invirtiendo la relación:
+\begin{equation}
+N = \text{round}\left(0.443 \cdot \frac{f_s}{f_c}\right).
+\end{equation}
+A mayor $N$ (menor $f_c$), mayor suavizado y menor punto de corte efectivo; en todos los casos evaluados, la frecuencia de corte más baja usa una ventana notablemente más ancha que las de corte más alto.
+
+\subsubsection{C.1 — Señales senoidales}
+
+Se reutilizan las señales A ($\sin(2\pi \cdot 60t)$, tono de 60\,Hz) y B (portadora de 1\,kHz modulada en amplitud por un mensaje de 60\,Hz) definidas en WORK\_FIVE, con $f_s = 10^5$\,Hz, filtradas a 40\,Hz y 100\,Hz. Ambas frecuencias de corte quedan muy por debajo del tono de 60\,Hz de A y de la portadora de 1\,kHz de B, por lo que el filtro atenúa fuertemente ambas señales; el caso de 40\,Hz, al usar una ventana más ancha, atenúa más que el de 100\,Hz. La Fig.~\ref{fig:work_seven_c1} muestra el caso de la señal A filtrada a 40\,Hz: el panel temporal evidencia la reducción de amplitud y el suavizado de la forma de onda, mientras que el panel de FFT muestra la caída de energía en 60\,Hz tras el filtrado.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{work_seven_c1_seno_40hz.png}
+\caption{C.1: filtro de media móvil a 40\,Hz sobre la señal senoidal A (60\,Hz), tiempo y FFT antes/después.}
+\label{fig:work_seven_c1}
+\end{figure}
+
+\subsubsection{C.2 — Señales cuadradas}
+
+Las señales A y B se reconstruyen reemplazando cada \texttt{sin(...)} por \texttt{scipy.signal.square(...)} de la misma frecuencia, y se filtran a 40\,Hz, 70\,Hz y 120\,Hz. Dado que una onda cuadrada concentra su energía en la fundamental y en sus armónicos impares, un filtro pasa-bajas con corte entre 40 y 120\,Hz elimina la mayoría de esos armónicos, dejando una forma redondeada, cercana a una senoidal, en lugar de los flancos abruptos originales. La Fig.~\ref{fig:work_seven_c2} muestra el caso de 70\,Hz para la señal cuadrada A: el panel temporal muestra la pérdida de los bordes abruptos y el panel FFT evidencia la supresión de los armónicos por encima del corte.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{work_seven_c2_cuadrada_70hz.png}
+\caption{C.2: filtro de media móvil a 70\,Hz sobre la señal cuadrada A, tiempo y FFT antes/después.}
+\label{fig:work_seven_c2}
+\end{figure}
+
+\subsubsection{C.3 — Audio real (gato)}
+
+El filtro se aplicó a un segmento corto (50\,ms) de la grabación de gato, en lugar de al archivo completo, siguiendo el mismo criterio de WORK\_FOUR: un resultado de filtrado graficado sobre varios segundos de audio es demasiado denso para leerse muestra por muestra. La Fig.~\ref{fig:work_seven_c3} muestra el caso de corte a 40\,Hz: el filtro elimina prácticamente todo el contenido de alta frecuencia del maullido, dejando una envolvente casi plana, consistente con que la energía relevante del sonido del gato está muy por encima de 40\,Hz.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{work_seven_c3_gato_40hz.png}
+\caption{C.3: filtro de media móvil a 40\,Hz sobre un segmento de 50\,ms del audio de gato, tiempo y FFT antes/después.}
+\label{fig:work_seven_c3}
+\end{figure}
+
+En conjunto, los tres sub-casos confirman el comportamiento esperado de un filtro de media móvil como pasa-bajas de orden bajo: buena capacidad de suavizado y atenuación de alta frecuencia, a costa de una transición banda-paso/banda-rechazo poco pronunciada, visible en los tres pares de espectros antes/después.

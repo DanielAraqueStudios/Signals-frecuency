@@ -1,0 +1,49 @@
+% ============================================================
+% WORK_SIX: Espectro wavelet + correlación vectorial (Tarea 2)
+% ============================================================
+
+\subsection{WORK\_SIX: Transformada wavelet continua y vector de correlación deslizante}
+
+Esta sección implementa la Tarea 2: mapas de energía tiempo-frecuencia mediante la Transformada Wavelet Continua (CWT) del audio de gato y de las voces disponibles, y un vector de salida de 100 elementos construido deslizando seis vectores de correlación fijos (\texttt{Vector1..Vector6}) sobre el audio de gato.
+
+\subsubsection{Espectro wavelet}
+
+El mapa de energía CWT se calcula con \texttt{cwt\_scalogram} (\texttt{wavelet\_lab/wavelets.py}), usando la wavelet de Morlet (\texttt{"morl"}) por su buena localización simultánea en tiempo y frecuencia, sobre 64 escalas logarítmicas entre 20\,Hz y la mitad de la frecuencia de muestreo. El enunciado pide el análisis "con 3 voces diferentes", pero el repositorio solo dispone de dos grabaciones de voz reutilizadas de WORK\_THREE (\texttt{persona1}, \texttt{persona2})\footnote{Ninguna tercera voz fue sintetizada para completar el enunciado: fabricar una grabación inexistente misrepresentaría datos reales, siguiendo la misma convención de honestidad que WORK\_THREE aplica a sus propias limitaciones (voces sintetizadas, documentadas como tales).}; por lo tanto se analizan únicamente esas dos, además del audio de gato.
+
+La Fig.~\ref{fig:work_six_gato} muestra el escalograma del gato: la energía se concentra en bandas altas y variables en el tiempo, consistente con el carácter no estacionario de un maullido. Las Figs.~\ref{fig:work_six_p1} y~\ref{fig:work_six_p2} muestran los escalogramas de las dos voces; ambas concentran su energía en bandas más bajas y con una evolución temporal más sostenida que el gato, y difieren entre sí en la distribución de energía en el tiempo, consistente con que corresponden a dos locutores/motores de voz distintos (ver limitación de \texttt{persona1}/\texttt{persona2} en la sección de WORK\_THREE).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{work_six_wavelet_gato.png}
+\caption{Escalograma CWT (wavelet de Morlet) del audio de gato.}
+\label{fig:work_six_gato}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{work_six_wavelet_persona1.png}
+\caption{Escalograma CWT de la grabación Persona 1.}
+\label{fig:work_six_p1}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{work_six_wavelet_persona2.png}
+\caption{Escalograma CWT de la grabación Persona 2.}
+\label{fig:work_six_p2}
+\end{figure}
+
+\subsubsection{Vector de correlación de 100 elementos}
+
+El enunciado define seis vectores fijos de longitud 10 (\texttt{Vector1..Vector6}, incluyendo formas constante, escalón y triangular/rampa) y da un único ejemplo resuelto: \texttt{Vector1} (todos unos) multiplicado punto a punto contra las primeras 10 muestras del audio, sumado y almacenado. Sin embargo pide un vector de salida de \emph{100} elementos a partir de solo 6 vectores fijos, y seis productos punto únicos solo pueden producir seis números, no cien. La interpretación implementada en \texttt{wavelet\_lab/vectors.py} generaliza el ejemplo resuelto como una \textbf{correlación cruzada deslizante} (\texttt{sliding\_correlation}): para cada vector, se calcula $\sum_k \text{vector}[k]\cdot\text{audio}[i+k]$ para $i=0,1,2,\dots$, de modo que el primer valor de cada bloque reproduce exactamente el ejemplo del enunciado. Los 100 espacios de salida se reparten lo más uniformemente posible entre los seis vectores ($100 = 6\cdot 16 + 4$): \texttt{Vector1..Vector4} aportan 17 valores cada uno y \texttt{Vector5}/\texttt{Vector6} aportan 16 cada uno, concatenados en orden \texttt{Vector1..Vector6}. Esta elección es una lectura razonable de un enunciado ambiguo, no la única posible, y queda documentada explícitamente en el código para facilitar su auditoría o reemplazo.
+
+La Fig.~\ref{fig:work_six_vector} muestra el vector de 100 elementos resultante, sombreado por bloque de vector de origen, aplicado sobre el audio de gato. El vector completo abarca valores entre $-1.11\times 10^{-6}$ y $1.61\times 10^{-6}$, con los primeros cinco valores (bloque de \texttt{Vector1}) iguales a $4.06\times 10^{-8}$, $1.18\times 10^{-7}$, $1.81\times 10^{-7}$, $2.17\times 10^{-7}$ y $2.91\times 10^{-7}$. La magnitud reducida de estos valores es consistente con la amplitud normalizada del audio cargado por \texttt{load\_audio} y con vectores de peso pequeño (varios de los \texttt{VectorN} incluyen ceros o pesos fraccionarios); los bloques asociados a \texttt{Vector2} (todo ceros) producen, como es de esperar, un bloque constante de valor cero.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{work_six_correlation_vector_100.png}
+\caption{Vector de salida de 100 elementos, sombreado por el \texttt{VectorN} que generó cada bloque.}
+\label{fig:work_six_vector}
+\end{figure}
+
+En conjunto, el análisis wavelet confirma diferencias cualitativas de banda y evolución temporal entre el gato y las dos voces disponibles, mientras que el vector de correlación deslizante deja documentada, en el propio código, la interpretación adoptada frente a una especificación de enunciado incompleta.

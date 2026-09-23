@@ -1,0 +1,93 @@
+% ============================================================
+% Informe consolidado — THEORY/FIRST_ROUND/WORK (WORK_ONE..WORK_TEN)
+%
+% Reúne en un solo documento los diez ejercicios de procesamiento
+% digital de señales desarrollados en THEORY/FIRST_ROUND/WORK/, cada
+% uno con su propia carpeta, main.py, tests/ y readme.md. Sigue el
+% mismo formato IEEEtran (conference) que WORK_THREE/report/main.tex.
+%
+% Para compilar: pdflatex main.tex (dos pasadas por las referencias
+% cruzadas \ref). Las figuras están en figuras/ (prefijadas por
+% carpeta, p.ej. work_three_*.png) para evitar colisiones de nombre.
+% ============================================================
+
+\documentclass[conference]{IEEEtran}
+
+% ============================================================
+% PAQUETES
+% ============================================================
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+
+\usepackage{cite}
+\usepackage{url}
+
+\usepackage{xcolor}
+
+\graphicspath{{figuras/}}
+
+% ============================================================
+% INFORMACIÓN DEL DOCUMENTO
+% ============================================================
+
+\title{
+Procesamiento digital de señales: informe consolidado de los ejercicios
+WORK\_ONE a WORK\_TEN
+}
+
+\author{
+\IEEEauthorblockN{
+Yuber Garnica,
+Miguel Gordillo,
+% TODO: reemplazar por el nombre completo del tercer autor
+Nombre Apellido
+}
+
+\IEEEauthorblockA{
+Programa de Ingeniería Mecatrónica\\
+Universidad Militar Nueva Granada\\
+Bogotá, Colombia\\
+correo@ejemplo.com\\
+\url{https://github.com/DanielAraqueStudios/Signals-frecuency}
+}
+}
+
+% ============================================================
+% DOCUMENTO
+% ============================================================
+
+\begin{document}
+
+\maketitle
+
+\input{secciones/resumen}
+\input{secciones/introduccion}
+
+\section{Resultados por tarea}
+\label{sec:resultados}
+
+\input{secciones/work_one}
+\input{secciones/work_two}
+\input{secciones/work_three}
+\input{secciones/work_four}
+\input{secciones/work_five}
+\input{secciones/work_six}
+\input{secciones/work_seven}
+\input{secciones/work_eight}
+\input{secciones/work_nine}
+\input{secciones/work_ten}
+
+\input{secciones/conclusiones}
+\input{secciones/referencias}
+
+\end{document}

@@ -1,0 +1,35 @@
+% ============================================================
+% WORK_NINE: Modulación AM del audio del gato a 50 kHz y 500 kHz
+% (Tarea 5)
+% ============================================================
+
+\subsection{WORK\_NINE: Modulación AM del audio del gato a 50 kHz y 500 kHz de muestreo}
+
+Esta sección implementa la Tarea 5: modular en amplitud la grabación del gato (\texttt{gato.ogg}, la misma usada en WORK\_THREE) sobre una portadora compartida, generando dos señales moduladas de salida a $50\,000$ Hz y $500\,000$ Hz de frecuencia de muestreo, evaluando en cada caso que la banda ocupada no produzca aliasing ni se superponga con la componente DC.
+
+La señal mensaje se remuestrea a cada tasa objetivo y se filtra pasa-bajas con \texttt{lowpass\_fft} (filtro FFT de corte abrupto) a un ancho de banda de $8\,000$ Hz antes de modular, ya que la tasa nativa de \texttt{gato.ogg} ($44\,100$ Hz) permite contenido hasta $\sim\!22\,000$ Hz que, sin este filtrado, podría desplazar la banda lateral superior ($f_c + f_{\text{mensaje}}$) más allá de los $25\,000$ Hz de Nyquist en la salida de $50\,000$ Hz. La modulación se realiza con \texttt{am\_modulate}, implementando AM estándar (no de portadora suprimida):
+\begin{equation}
+s[n] = \left(1 + m \cdot m_{\text{norm}}[n]\right)\cos(2\pi f_c n / f_s)
+\label{eq:am-gato}
+\end{equation}
+con índice de modulación $m = 1.0$ y el mensaje normalizado en pico a $[-1, 1]$, de modo que la envolvente $(1 + m_{\text{norm}})$ nunca se vuelve negativa (sin sobremodulación) y la portadora permanece visible como línea espectral en $f_c$, flanqueada por bandas laterales en $f_c \pm f_{\text{mensaje}}$.
+
+Se eligió una portadora compartida $f_c = 10\,000$ Hz para ambas tasas de muestreo. Con el mensaje limitado a $8\,000$ Hz, la banda AM ocupada es $[f_c - 8\,000, f_c + 8\,000] = [2\,000, 18\,000]$ Hz, la cual permanece por encima de $0$ Hz (sin solapamiento con DC) y por debajo del Nyquist en ambas tasas: a $50\,000$ Hz el Nyquist es $25\,000$ Hz, dejando un margen amplio frente a los $18\,000$ Hz ocupados, y a $500\,000$ Hz el Nyquist de $250\,000$ Hz satisface la condición de forma trivial. Al ser válido el mismo par portadora/corte en ambas tasas, \texttt{modulate\_at\_rate} no requiere ajuste independiente por tasa de muestreo.
+
+Este resultado es consistente con la comparación de WORK\_FIVE, donde la señal sintética $(2 + \sin(2\pi \cdot 60 t))\sin(2\pi f_c t)$ evaluada a $f_s = 10^5$ Hz frente a $f_s = 10^6$ Hz mostró que una tasa de muestreo insuficiente no resuelve limpiamente la portadora y las bandas laterales; aquí se aplica la misma lógica de aliasing a audio real en lugar de un tono sintético.
+
+Las Figs.~\ref{fig:work9-50k} y~\ref{fig:work9-500k} muestran, para cada tasa de muestreo, un segmento en el dominio del tiempo junto con la FFT de magnitud de un solo lado de la señal modulada resultante, generadas por \texttt{plot\_modulation} a partir de la ejecución real de \texttt{main.py}. En ambos casos la portadora en $10\,000$ Hz y sus bandas laterales son visibles en el espectro, confirmando que la elección de $f_c$ y del corte del filtro pasa-bajas es válida simultáneamente a $50\,000$ Hz y a $500\,000$ Hz de muestreo.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{work_nine_modulacion_50000hz.png}
+\caption{Modulación AM del audio del gato, $f_s = 50\,000$ Hz: segmento temporal y FFT de la señal modulada.}
+\label{fig:work9-50k}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{work_nine_modulacion_500000hz.png}
+\caption{Modulación AM del audio del gato, $f_s = 500\,000$ Hz: segmento temporal y FFT de la señal modulada.}
+\label{fig:work9-500k}
+\end{figure}

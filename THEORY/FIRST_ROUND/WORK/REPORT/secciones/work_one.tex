@@ -1,0 +1,87 @@
+% ============================================================
+% WORK_ONE: DTMF Dialer
+% ============================================================
+
+\subsection{WORK\_ONE: Sintetizador y verificación de tonos DTMF}
+
+\subsubsection{Objetivo y metodología}
+
+La tarea consistió en implementar un generador de señales DTMF
+(\emph{Dual-Tone Multi-Frequency}) — el esquema de tonos usado por los
+teclados telefónicos — sintetizando cada dígito como la suma de dos
+senoidales (grupo de baja frecuencia, 697--941~Hz, y grupo de alta
+frecuencia, 1209--1477~Hz) según el estándar ITU-T~Q.23. La implementación
+(\texttt{dtmf\_dialer/dtmf.py}) mezcla ambas senoidales como su promedio
+($0.5\,(\sin_1+\sin_2)$) para evitar recorte antes de cuantizar a PCM de
+16~bits, con muestreo a 44.1~kHz. El paquete expone tanto una interfaz de
+línea de comandos (\texttt{main.py}) como una GUI de escritorio en PyQt6
+(\texttt{run\_gui.py}) que comparten el mismo backend de síntesis, y
+produce archivos \texttt{.wav} reproducibles.
+
+Se verificó la implementación en dos niveles: (1) la suite de pruebas
+unitarias del proyecto (\texttt{tests/test\_dtmf.py}), y (2) un análisis
+espectral independiente por FFT sobre uno de los archivos \texttt{.wav}
+generados, para confirmar que las frecuencias realmente sintetizadas
+coinciden con la tabla ITU-T.
+
+\subsubsection{Resultados}
+
+La suite de 15 pruebas unitarias (\texttt{pytest}) se ejecutó completa y
+pasó en su totalidad, cubriendo la tabla de frecuencias, el conteo de
+muestras y tipo de dato (\texttt{int16}) de los tonos generados, los
+límites de amplitud, el escalado lineal de secuencias multi-dígito, el
+descarte de caracteres no numéricos y la integridad del ciclo
+escritura/lectura de \texttt{.wav}.
+
+Para verificar el contenido espectral real, se tomó el archivo generado
+\texttt{output/dial\_7004191.wav} (marcación del número \texttt{7004191})
+y se aplicó FFT a cada bloque de 0.5~s correspondiente a un dígito,
+buscando el pico dominante dentro de las bandas de baja (650--1000~Hz) y
+alta frecuencia (1150--1500~Hz). Los picos detectados coincidieron con la
+tabla ITU-T con una desviación máxima de 1~Hz, consistente con la
+resolución espectral del bin de FFT usado ($\Delta f \approx 2$~Hz para
+una ventana de 0.5~s a 44.1~kHz):
+
+\begin{table}[!t]
+\centering
+\caption{Frecuencias detectadas por FFT vs. tabla ITU-T (\texttt{dial\_7004191.wav})}
+\label{tab:dtmf_verif}
+\small
+\begin{tabular}{@{}c c c c c@{}}
+\toprule
+Dígito & $f_{low}$ detectada & $f_{high}$ detectada & Nominal ITU-T \\
+\midrule
+7 & 852.0 Hz & 1208.0 Hz & (852, 1209) \\
+0 & 940.0 Hz & 1336.0 Hz & (941, 1336) \\
+0 & 940.0 Hz & 1336.0 Hz & (941, 1336) \\
+4 & 770.0 Hz & 1208.0 Hz & (770, 1209) \\
+1 & 696.0 Hz & 1210.0 Hz & (697, 1209) \\
+9 & 852.0 Hz & 1476.0 Hz & (852, 1477) \\
+1 & 696.0 Hz & 1210.0 Hz & (697, 1209) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La Fig.~\ref{fig:dtmf_spectrum} muestra el espectro de magnitud de cada uno
+de los siete dígitos de la secuencia \texttt{7004191}, confirmando
+visualmente que cada tono ocupa exactamente dos picos angostos en las
+frecuencias esperadas, sin energía espuria significativa fuera de las
+bandas DTMF.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{work_one_dtmf_spectrum.png}
+\caption{Espectro FFT de cada dígito de la secuencia \texttt{7004191} generada por el sintetizador DTMF, con los dos picos de frecuencia (grupo bajo y alto) claramente resueltos.}
+\label{fig:dtmf_spectrum}
+\end{figure}
+
+\subsubsection{Limitaciones}
+
+El proyecto no incluye un módulo de generación de figuras propio; la
+Fig.~\ref{fig:dtmf_spectrum} fue producida específicamente para este
+informe mediante un análisis FFT ad-hoc sobre un archivo \texttt{.wav}
+real ya generado por el propio programa, no mediante datos sintéticos
+inventados. La reproducción de audio (\texttt{play\_wav}, basada en
+\texttt{winsound}) es específica de Windows y, por diseño del proyecto,
+está excluida de las pruebas automatizadas; solo se validó la síntesis y
+exportación, que son multiplataforma.

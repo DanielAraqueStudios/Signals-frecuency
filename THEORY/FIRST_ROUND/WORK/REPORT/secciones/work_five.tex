@@ -1,0 +1,14 @@
+\subsection{WORK\_FIVE: Señal AM y análisis de muestreo (Tarea 3-A/B)}
+
+En este trabajo se generaron un tono puro de mensaje $A(t) = \sin(2\pi \cdot 60t)$ y una señal modulada en amplitud $B(t) = \left(2 + \sin(2\pi \cdot 60t)\right)\sin(2\pi f_c t)$, implementados en \texttt{am\_lab/signals.py}. El envolvente $2 + \sin(2\pi \cdot 60t)$ varía en el rango $[1,3]$, por lo que la amplitud de $B(t)$ queda acotada en $\pm 3$ independientemente de la frecuencia portadora $f_c$. Cada señal se analizó en el dominio del tiempo y en el dominio de la frecuencia mediante \texttt{am\_lab/spectrum.py}, que calcula la FFT de un solo lado normalizada en amplitud (\texttt{single\_sided\_fft}).
+
+Se compararon dos regímenes de muestreo para la señal AM: una frecuencia de muestreo $f_s = 10^5$ Hz con portadora $f_c = 1$ kHz, y una frecuencia de muestreo $f_s = 10^6$ Hz con portadora $f_c = 100$ kHz. En ambos casos la portadora se mantiene muy por debajo del límite de Nyquist ($f_s/2$) de su propio régimen, de modo que la comparación no ilustra aliasing sobre la misma señal, sino dos configuraciones de muestreo correctamente resueltas mostradas lado a lado.
+
+La Fig.~\ref{fig:work_five_fft} muestra la figura de $2\times2$ generada por \texttt{main.py}: el tono de mensaje de 60 Hz en tiempo y frecuencia (fila superior), y la señal AM muestreada a $f_s=10^5$ Hz con portadora de 1 kHz junto con la misma señal muestreada a $f_s=10^6$ Hz con portadora de 100 kHz (fila inferior). En ambos espectros de la señal AM se observan las bandas laterales características de la modulación de amplitud alrededor de la frecuencia portadora, consistentes con la modulación por el tono de 60 Hz, mientras que el espectro del tono de mensaje muestra un único pico dominante en 60 Hz.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{work_five_analisis_senales_fft.png}
+\caption{Señales en tiempo y frecuencia: tono de mensaje (60 Hz) y señal AM muestreada a $f_s=10^5$ Hz ($f_c=1$ kHz) y a $f_s=10^6$ Hz ($f_c=100$ kHz).}
+\label{fig:work_five_fft}
+\end{figure}

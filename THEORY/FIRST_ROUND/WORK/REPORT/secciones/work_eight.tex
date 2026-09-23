@@ -1,0 +1,97 @@
+% ============================================================
+% WORK_EIGHT: Diseño manual de filtros IIR (Tarea 4)
+% ============================================================
+
+\subsection{WORK\_EIGHT: Diseño manual de coeficientes de filtros IIR de 2\textsuperscript{do} y 4\textsuperscript{to} orden}
+
+Esta tarea deriva a mano los coeficientes de un filtro pasabajas Butterworth de segundo orden mediante la transformada bilineal (ítem A, aplicado a $f_c = 40$ Hz y $f_c = 100$ Hz), y de un filtro de cuarto orden construido como cascada de dos secciones de segundo orden (ítem B), sin usar en ningún momento \texttt{scipy.signal.butter} en la ruta de diseño ni de aplicación del filtro; la comparación contra \texttt{scipy.signal.butter} + \texttt{scipy.signal.lfilter} se usa únicamente como verificación independiente.
+
+\subsubsection{Derivación del filtro de segundo orden}
+
+El prototipo analógico Butterworth de segundo orden, con frecuencia de corte $\omega_c$ en rad/s, es
+
+\begin{equation}
+H(s) = \frac{\omega_c^2}{s^2 + \sqrt{2}\,\omega_c s + \omega_c^2}
+\label{eq:butter2_analog}
+\end{equation}
+
+donde $\sqrt{2}$ es el coeficiente de amortiguamiento de segundo orden que produce una respuesta máximamente plana en la banda de paso. Para que el corte digital caiga exactamente en $f_c$ tras la distorsión de frecuencia de la transformada bilineal, se prealabea la frecuencia de corte:
+
+\begin{equation}
+\omega_c = 2 f_s \tan\!\left(\frac{\pi f_c}{f_s}\right)
+\label{eq:prewarp}
+\end{equation}
+
+Sustituyendo la transformada bilineal $s = K\dfrac{1-z^{-1}}{1+z^{-1}}$, con $K = 2f_s$, en \eqref{eq:butter2_analog} y definiendo $C = K/\omega_c$, se obtiene, con $a_0' = C^2 + \sqrt{2}\,C + 1$:
+
+\begin{equation}
+b_0 = b_2 = \frac{1}{a_0'}, \qquad b_1 = \frac{2}{a_0'}
+\label{eq:b_coefs}
+\end{equation}
+
+\begin{equation}
+a_1 = \frac{2(1-C^2)}{a_0'}, \qquad a_2 = \frac{C^2 - \sqrt{2}\,C + 1}{a_0'}, \qquad a_0 = 1
+\label{eq:a_coefs}
+\end{equation}
+
+que corresponden a la ecuación en diferencias aplicada mediante un lazo \texttt{for} explícito (sin \texttt{lfilter}):
+
+\begin{equation}
+y[n] = b_0 x[n] + b_1 x[n-1] + b_2 x[n-2] - a_1 y[n-1] - a_2 y[n-2]
+\label{eq:diff_eq}
+\end{equation}
+
+Con $f_s = 10^5$ Hz, la evaluación numérica de \eqref{eq:b_coefs}--\eqref{eq:a_coefs} da, para $f_c = 40$ Hz,
+
+\begin{equation}
+b \approx [2.0\times10^{-6},\ 4.0\times10^{-6},\ 2.0\times10^{-6}], \quad a \approx [1,\ -1.9964,\ 0.9965]
+\end{equation}
+
+y para $f_c = 100$ Hz,
+
+\begin{equation}
+b \approx [1.0\times10^{-5},\ 2.0\times10^{-5},\ 1.0\times10^{-5}], \quad a \approx [1,\ -1.9911,\ 0.9912]
+\end{equation}
+
+En ambos casos los polos de $a$ quedan justo dentro del círculo unitario cerca de $z=1$, como se espera para un corte bajo respecto a $f_s$. La prueba \texttt{test\_biquad\_matches\_scipy\_coefficients} confirma que esta forma cerrada reproduce bit a bit \texttt{scipy.signal.butter(2, fc, fs=fs)} (ambos son la misma matemática Butterworth con transformada bilineal; \texttt{scipy} se usa solo como verificación independiente, nunca en la ruta manual de filtrado). La Fig.~\ref{fig:work8_fc40} y la Fig.~\ref{fig:work8_fc100} muestran el espectro de la señal de prueba multitono antes y después de aplicar el filtro manual en cada corte.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{work_eight_parte_a_fc40hz.png}
+\caption{Filtro manual de 2\textsuperscript{do} orden, $f_c = 40$ Hz: espectro antes y después de aplicar la ecuación en diferencias \eqref{eq:diff_eq}.}
+\label{fig:work8_fc40}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{work_eight_parte_a_fc100hz.png}
+\caption{Filtro manual de 2\textsuperscript{do} orden, $f_c = 100$ Hz.}
+\label{fig:work8_fc100}
+\end{figure}
+
+\subsubsection{Filtro de cuarto orden en cascada y comparación con \texttt{scipy}}
+
+Un Butterworth de cuarto orden se factoriza en dos secciones de segundo orden en cascada, con coeficientes de amortiguamiento
+
+\begin{equation}
+d_1 = 2\sin\!\left(\frac{\pi}{8}\right) \approx 0.7654, \qquad d_2 = 2\sin\!\left(\frac{3\pi}{8}\right) \approx 1.8478
+\end{equation}
+
+correspondientes a los ángulos de los dos pares de polos conjugados para $N=4$. Cada sección usa la misma forma cerrada de \eqref{eq:b_coefs}--\eqref{eq:a_coefs}, sustituyendo $\sqrt{2}$ por el $d_i$ respectivo, y ambas se aplican en serie, cada una mediante su propio lazo \texttt{for} (\texttt{apply\_cascade}) — la ruta que la tarea exige sin funciones de conveniencia de diseño/aplicación de \texttt{scipy}. La prueba \texttt{test\_order4\_cascade\_matches\_scipy\_butter\_design} confirma que combinar (\texttt{np.convolve}) las dos secciones manuales reproduce el sistema único de cuarto orden de \texttt{scipy.signal.butter(4, fc, fs=fs)} con una tolerancia de $10^{-8}$.
+
+Ejecutando la cascada manual de cuarto orden y \texttt{scipy.signal.butter(4,~...)} + \texttt{scipy.signal.lfilter} sobre la misma señal de prueba multitono ($f_c = 100$ Hz, $f_s = 10^5$ Hz), se obtiene
+
+\begin{equation}
+\max\left| y_{\text{manual}} - y_{\text{scipy}} \right| \approx 3.1 \times 10^{-7}
+\end{equation}
+
+diferencia del orden del ruido de punto flotante de doble precisión acumulado por dos rutas de cómputo distintas (biquads en cascada vs. el sistema directo transpuesto forma-II de \texttt{scipy}), no un desacuerdo real: ambas implementan la misma función de transferencia y coinciden hasta $\sim$7 cifras significativas. La Fig.~\ref{fig:work8_parteb} muestra esta comparación.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{work_eight_parte_b_comparacion.png}
+\caption{Cascada manual de 4\textsuperscript{to} orden vs.\ \texttt{scipy.signal.butter}+\texttt{lfilter}, $f_c = 100$ Hz: señales de salida y su diferencia.}
+\label{fig:work8_parteb}
+\end{figure}
+
+Ninguna de las dos implementaciones es ``más precisa'' que la otra; donde sí difieren en la práctica es en robustez numérica: la forma en cascada de biquads (la implementación manual de este trabajo) es la estructura más robusta para una implementación en hardware/punto fijo o con corte muy bajo respecto a $f_s$, ya que los coeficientes de cada etapa de segundo orden permanecen bien escalados y sus polos están individualmente bien condicionados, mientras que un sistema único de forma directa de cuarto orden puede ser más sensible a la cuantización de coeficientes en órdenes altos.

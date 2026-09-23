@@ -1,0 +1,34 @@
+% ============================================================
+% WORK_TWO: Reconstrucción de una onda cuadrada mediante serie de Fourier
+% ============================================================
+
+\subsection{WORK\_TWO: Reconstrucción de onda cuadrada mediante serie de Fourier}
+
+Este ejercicio implementa la reconstrucción de una onda cuadrada a partir de su serie de Fourier en senos, evaluando el efecto del número de armónicos y de la tasa de muestreo sobre la señal reconstruida. La implementación (paquete \texttt{fourier\_square}) sintetiza la señal como
+
+\begin{equation}
+x(t) = \frac{4}{\pi} \sum_{n \,\text{impar}} \frac{\sin(n \omega_0 t)}{n},
+\label{eq:fourier-cuadrada}
+\end{equation}
+
+con una frecuencia fundamental $f_0 = 3$~Hz ($\omega_0 = 6\pi$~rad/s), sumando únicamente armónicos impares —como corresponde a la serie de Fourier de una onda cuadrada, que no contiene componentes pares— cada uno ponderado por $1/n$. La función \texttt{fourier\_square\_wave} evalúa la Ec.~\ref{eq:fourier-cuadrada} de forma vectorizada con NumPy sobre un eje temporal de $1$~s de duración, mientras que \texttt{plot\_sampling\_rate\_grid} arma, para una tasa de muestreo dada, una figura con un subplot por cada valor de $N \in \{1, 2, 3, 5, 10\}$ armónicos, superponiendo la señal reconstruida (línea continua) con las muestras discretas tomadas a esa tasa.
+
+\texttt{main.py} ejecuta esta rutina para cinco tasas de muestreo ($1, 2, 3, 6$ y $30$~kHz); las Figs.~\ref{fig:work_two_fs1000} y \ref{fig:work_two_fs30000} muestran los casos extremos de ese barrido, $1$~kHz y $30$~kHz.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{work_two_fourier_fs1000.png}
+\caption{Reconstrucción de onda cuadrada para $N = 1, 2, 3, 5, 10$ armónicos, muestreada a $f_s = 1$~kHz ($T_s = 1$~ms).}
+\label{fig:work_two_fs1000}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{work_two_fourier_fs30000.png}
+\caption{Misma reconstrucción que la Fig.~\ref{fig:work_two_fs1000}, muestreada a $f_s = 30$~kHz ($T_s \approx 0.033$~ms).}
+\label{fig:work_two_fs30000}
+\end{figure}
+
+En ambas figuras se observa que, a medida que aumenta el número de armónicos $N$, la señal reconstruida se aproxima cada vez más a la forma de onda cuadrada ideal, con flancos más pronunciados y un mayor número de oscilaciones cerca de las discontinuidades. Sin embargo, incluso en el subplot con $N = 10$ persiste un sobreimpulso apreciable inmediatamente antes y después de cada flanco: este es el fenómeno de Gibbs, cuyo sobreimpulso (cercano al $9\,\%$ del salto) no desaparece al aumentar $N$, sino que se estrecha hacia la discontinuidad sin reducir su amplitud pico, consistente con lo documentado en el \texttt{readme.md} del proyecto.
+
+Comparando la Fig.~\ref{fig:work_two_fs1000} ($f_s = 1$~kHz) con la Fig.~\ref{fig:work_two_fs30000} ($f_s = 30$~kHz) se aprecia el segundo efecto estudiado: la tasa de muestreo controla exclusivamente la densidad de puntos (marcadores rojos) con que se evalúa y marca la señal reconstruida, que es una expresión cerrada y continua; no se simula un proceso de conversión analógico-digital ni aliasing, por lo que la forma de la envolvente reconstruida en sí —y el sobreimpulso de Gibbs— es idéntica entre ambas figuras para un mismo $N$, y solo cambia la resolución visual con la que se muestrea esa curva.

@@ -1,0 +1,41 @@
+% ============================================================
+% CONCLUSIONES
+% ============================================================
+
+\section{Conclusiones}
+\label{sec:conclusiones}
+
+Los diez ejercicios desarrollados cubren, en conjunto, el flujo completo
+de procesamiento digital de señales trabajado en este curso: generación y
+verificación de señales sintéticas (\texttt{WORK\_ONE}, \texttt{WORK\_TWO}),
+caracterización espectral de audio real (\texttt{WORK\_THREE}),
+convolución discreta (\texttt{WORK\_FOUR}), modulación de amplitud y su
+comportamiento bajo distintas frecuencias de muestreo
+(\texttt{WORK\_FIVE}, \texttt{WORK\_NINE}), análisis tiempo-frecuencia
+mediante wavelets (\texttt{WORK\_SIX}), filtrado digital de promedio
+móvil (\texttt{WORK\_SEVEN}), diseño manual de filtros IIR validado
+numéricamente contra \texttt{scipy.signal} (\texttt{WORK\_EIGHT}), y
+filtrado FIR/IIR combinado con la transformada de Hilbert incluyendo un
+barrido de orden de filtro (\texttt{WORK\_TEN}).
+
+Tres observaciones transversales se repiten en varias de las carpetas.
+Primero, la elección de la ventana de análisis o la duración de la señal
+(por ejemplo, la ventana fija de 3~s en \texttt{WORK\_THREE}, o la
+extensión a 1~s del tono de 60~Hz en \texttt{WORK\_TEN} frente a los
+0.05~s originales de \texttt{WORK\_FIVE}) afecta directamente la
+resolución espectral obtenible por FFT, y debe documentarse junto con
+cualquier resultado de frecuencia dominante. Segundo, cuando una tarea
+depende de datos no disponibles en el repositorio (una tercera voz para
+\texttt{WORK\_THREE} y \texttt{WORK\_SIX}, o un ambiente de Matlab para
+la comparación de \texttt{WORK\_EIGHT}), el enfoque adoptado en todo el
+proyecto fue documentar la ausencia explícitamente en el
+\texttt{readme.md} correspondiente en lugar de fabricar el dato faltante;
+este informe conserva esa misma práctica en cada subsección. Tercero, en
+los ejercicios de diseño de filtros (\texttt{WORK\_SEVEN},
+\texttt{WORK\_EIGHT}, \texttt{WORK\_TEN}) la validación numérica contra
+una implementación de referencia (\texttt{scipy.signal}) resultó
+indispensable para confirmar que una implementación manual —ya sea un
+filtro de promedio móvil, un filtro IIR derivado a mano mediante la
+transformada bilineal, o un filtro FIR/IIR aplicado mediante ciclo
+\texttt{for}— es correcta antes de interpretar sus resultados sobre una
+señal real.

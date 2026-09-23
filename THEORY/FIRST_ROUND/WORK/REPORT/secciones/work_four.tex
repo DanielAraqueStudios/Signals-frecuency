@@ -1,0 +1,34 @@
+% ============================================================
+% WORK_FOUR: Laboratorio de convolución discreta
+% ============================================================
+
+\subsection{WORK\_FOUR: Convolución discreta de una señal de audio con núcleos escalón y trapezoidal}
+
+Este laboratorio aplica convolución discreta a una grabación real de audio (\texttt{audio\_samples/gato/gato.ogg}, la misma grabación de gato usada en WORK\_THREE) con tres núcleos cortos definidos en \texttt{conv\_lab/kernels.py}: \texttt{step\_10} (escalón de 10 muestras, mitad ceros y mitad unos), \texttt{step\_100} (el mismo patrón de escalón 50/50 pero escalado a 100 muestras) y \texttt{trapezoid\_10} (núcleo trapezoidal de 10 muestras, \([0,\,0.25,\,0.5,\,0.75,\,1,\,1,\,0.75,\,0.5,\,0.25,\,0]\)).
+
+El proyecto implementa la convolución de dos formas, verificadas por pruebas automatizadas que comparan ambas frente a cada núcleo registrado: \texttt{manual\_convolve}, una doble suma directa que implementa literalmente $y[n]=\sum_k x[k]\,h[n-k]$ con fines didácticos, y \texttt{convolve}, un envoltorio de \texttt{numpy.convolve} que es el que efectivamente usa \texttt{main.py} sobre el audio. Para cada núcleo, \texttt{main.py} extrae un segmento corto de la grabación (10~ms, con un desplazamiento de 0.5~s dentro del archivo) y grafica entrada, núcleo y salida apiladas, guardando la figura en \texttt{output/}.
+
+Los resultados numéricos (longitudes de segmento, núcleo y salida, y el rango min/max de la salida) se imprimen por consola en cada ejecución y se corresponden con las figuras generadas.
+
+Las Figs.~\ref{fig:work_four_step10}, \ref{fig:work_four_step100} y \ref{fig:work_four_trapezoid10} muestran los tres casos. Los núcleos \texttt{step\_10} y \texttt{step\_100} corresponden a un filtro de suma móvil retardado (boxcar): como la primera mitad de $h$ es cero, $y[n]$ solo acumula las muestras más recientes de la ventana, lo que actúa como un pasa-bajas rudimentario. Esto se observa en las figuras como una versión suavizada y desplazada en fase de la entrada, con un suavizado más marcado en \texttt{step\_100} que en \texttt{step\_10} debido a su ventana diez veces más larga. El núcleo \texttt{trapezoid\_10}, al ser una versión (casi) simétrica y con rampas suaves de la misma idea de promedio móvil, produce una salida con menos ringing en los bordes que el que introduce la ventana rectangular abrupta de \texttt{step\_10}.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{work_four_convolucion_step_10.png}
+\caption{Convolución del segmento de audio con el núcleo \texttt{step\_10} (escalón de 10 muestras).}
+\label{fig:work_four_step10}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{work_four_convolucion_step_100.png}
+\caption{Convolución del segmento de audio con el núcleo \texttt{step\_100} (escalón de 100 muestras, mayor suavizado).}
+\label{fig:work_four_step100}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{work_four_convolucion_trapezoid_10.png}
+\caption{Convolución del segmento de audio con el núcleo \texttt{trapezoid\_10} (promedio móvil con ventana trapezoidal).}
+\label{fig:work_four_trapezoid10}
+\end{figure}

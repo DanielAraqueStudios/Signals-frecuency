@@ -1,0 +1,76 @@
+% ============================================================
+% WORK_TEN: Filtrado FIR/IIR y envolvente de Hilbert (Tarea 6, 6.1-6.4)
+% ============================================================
+
+\subsection{WORK\_TEN: Filtrado FIR/IIR y envolvente de Hilbert}
+
+Este bloque cubre los ítems 6 y 6.1-6.4: eliminación de frecuencias negativas vía FFT, diseño y aplicación de filtros pasabajas FIR e IIR a dos frecuencias de corte, extracción de la envolvente mediante la transformada de Hilbert, y un barrido del orden del filtro. Los filtros FIR se diseñan por el método de ventana (\texttt{scipy.signal.firwin}) y los IIR como Butterworth (\texttt{scipy.signal.butter}), ambos aplicados en fase cero con \texttt{scipy.signal.filtfilt}, de modo que las diferencias observadas entre ellos se deben a la forma del filtro (nitidez de la banda de transición, rizado) y no a un desfase.
+
+\subsubsection{Tarea 6: señal de 60 Hz, corte a 300 Hz}
+
+Sobre una señal larga $\sin(2\pi \cdot 60 t)$ a $f_s = 10^5$ Hz y $1.0$ s de duración (heredada de WORK\_FIVE pero extendida para obtener una resolución espectral de 1 Hz), se eliminaron explícitamente las frecuencias negativas anulando los bins correspondientes en el dominio de la frecuencia antes de la IFFT (Fig.~\ref{fig:work_ten_t6_neg}), como primer paso hacia la señal analítica. Sobre esa misma señal se diseñaron y compararon un filtro FIR y uno IIR pasabajas con corte en 300 Hz (Fig.~\ref{fig:work_ten_t6_fir_iir}).
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{work_ten_t6_negative_freq_removal.png}
+\caption{Eliminación de frecuencias negativas (FFT $\to$ anulación de bins $f<0$ $\to$ IFFT) sobre la señal de 60 Hz.}
+\label{fig:work_ten_t6_neg}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{work_ten_t6_fir_iir_300hz.png}
+\caption{Comparación de filtros pasabajas FIR e IIR (corte 300 Hz) sobre la señal de 60 Hz, aplicados en fase cero con \texttt{filtfilt}.}
+\label{fig:work_ten_t6_fir_iir}
+\end{figure}
+
+\subsubsection{Tarea 6.1: audio de gato modulado en AM, corte a 10 kHz}
+
+El mismo procedimiento se repitió sobre el audio de gato de \texttt{WORK\_THREE} (\texttt{gato.ogg}), modulado en AM localmente con una portadora de 20 kHz (\texttt{message} $\times \sin(2\pi f_c t)$, siguiendo el esquema de \texttt{WORK\_FIVE}) para representar la señal de audio ya modulada requerida por el enunciado, procesando los primeros 2 s de la grabación. Se eliminaron las frecuencias negativas de la señal modulada (Fig.~\ref{fig:work_ten_t61_neg}) y se compararon los filtros FIR e IIR con corte en 10 kHz (Fig.~\ref{fig:work_ten_t61_fir_iir}).
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{work_ten_t6_1_negative_freq_removal_cat.png}
+\caption{Eliminación de frecuencias negativas sobre el audio de gato modulado en AM (portadora 20 kHz).}
+\label{fig:work_ten_t61_neg}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{work_ten_t6_1_fir_iir_10khz_cat.png}
+\caption{Comparación de filtros FIR e IIR (corte 10 kHz) sobre el audio de gato modulado.}
+\label{fig:work_ten_t61_fir_iir}
+\end{figure}
+
+\subsubsection{Tarea 6.2: envolvente de Hilbert de la señal de 60 Hz}
+
+Se calculó la envolvente de la señal larga de 60 Hz mediante \texttt{scipy.signal.hilbert} (magnitud de la señal analítica) y se filtró con el filtro pasabajas de 300 Hz de la Tarea 6, mostrando cómo el filtrado suaviza la envolvente obtenida (Fig.~\ref{fig:work_ten_t62}).
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{work_ten_t6_2_hilbert_envelope_60hz.png}
+\caption{Envolvente de Hilbert de la señal de 60 Hz, antes y después del filtro de 300 Hz.}
+\label{fig:work_ten_t62}
+\end{figure}
+
+\subsubsection{Tarea 6.3: envolvente de Hilbert del audio de gato}
+
+El mismo análisis de envolvente se aplicó al audio de gato modulado en AM (Fig.~\ref{fig:work_ten_t63}), donde la envolvente extraída por Hilbert recupera la forma del mensaje original modulado sobre la portadora de 20 kHz.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{work_ten_t6_3_hilbert_envelope_cat.png}
+\caption{Envolvente de Hilbert del audio de gato modulado en AM.}
+\label{fig:work_ten_t63}
+\end{figure}
+
+\subsubsection{Tarea 6.4: barrido de orden del filtro}
+
+Se comparó el filtro FIR pasabajas de 300 Hz en los órdenes 2, 10, 20, 50 y 100 (Fig.~\ref{fig:work_ten_t64}). Al aumentar el orden, la banda de transición se estrecha —el corte se acerca visiblemente más a los 300 Hz exactos en el orden 100 que en el orden 2—, el retardo de grupo aumenta —más coeficientes implican un mayor transitorio de asentamiento al inicio de la señal, aun con \texttt{filtfilt} cancelando el desfase neto— y el rizado/sobreimpulso cerca de discontinuidades crece ligeramente, aunque la ventana de Hamming por defecto de \texttt{firwin} lo mantiene moderado frente a un truncamiento rectangular. A diferencia de un filtro IIR Butterworth, cuyos coeficientes se vuelven mal condicionados y pueden producir resultados numéricamente inestables en órdenes altos, el filtro FIR se mantuvo numéricamente estable en todos los órdenes evaluados, incluyendo órdenes $\geq 10$ —una razón estructural para preferir FIR cuando se requiere un corte muy definido y la estabilidad/fase importan más que el costo computacional.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{work_ten_t6_4_order_sweep.png}
+\caption{Barrido de orden (2, 10, 20, 50, 100) del filtro FIR pasabajas de 300 Hz.}
+\label{fig:work_ten_t64}
+\end{figure}
