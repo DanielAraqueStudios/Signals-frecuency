@@ -1,0 +1,25 @@
+% I. INTRODUCCIÓN
+
+\section{Introducción}
+
+La evaluación TEST2 propone tres ejercicios sobre archivos de datos
+entregados: dos señales moduladas en formato CSV (columnas tiempo y
+amplitud) y un código de filtrado de imágenes. Los archivos de las
+señales siguen la convención \texttt{XX\_k\_modulated\_signal\_f\_fs\_T.csv},
+donde $f$ es la frecuencia de la portadora en kHz, $f_s$ la frecuencia de
+muestreo en kHz y $T$ la duración de la señal (punto 1) o el periodo de
+bit (punto 2) en ms. Para este grupo se asignó el conjunto 01: la señal
+del punto 1 tiene $f=20$~kHz, $f_s=200$~kHz y $T=40$~ms, y la del punto 2
+tiene $f=10$~kHz, $f_s=100$~kHz y periodo de bit de 1~ms.
+
+Los parámetros del nombre de archivo no se asumieron: se verificaron
+contra las marcas de tiempo y el espectro de los propios datos. Cada punto
+se implementó como un paquete Python independiente con pruebas
+automatizadas, y este documento reúne los resultados obtenidos al ejecutar
+ese código, junto con las explicaciones solicitadas. El código fuente
+completo está disponible en
+\url{https://github.com/DanielAraqueStudios/Signals-frecuency}, bajo
+\texttt{THEORY/FIRST\_ROUND/TEST2/}.
+
+La Sección~\ref{sec:resultados} desarrolla los tres puntos y la
+Sección~\ref{sec:conclusiones} resume las observaciones principales.

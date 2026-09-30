@@ -1,0 +1,60 @@
+% ============================================================
+% TEST2 Punto 2: Decodificacion de mensaje ASCII por OOK
+% ============================================================
+
+\subsection{Punto 2: Decodificación del mensaje ASCII transmitido por OOK}
+
+Se analiza la señal \texttt{01\_2\_modulated\_signal\_10.0\_100.0\_1.0.csv}, una señal OOK (on/off keying) con portadora de 10 kHz. El archivo contiene 14\,400 muestras con $\Delta t = 10^{-5}$ s medido a partir de las marcas de tiempo reales, es decir $f_s = 100$ kHz y una duración de 0.14399 s. Con $T = 1$ ms por bit resultan 144 bits, o sea 18 bytes, compatibles con un mensaje ASCII de 18 caracteres.
+
+\subsubsection{(a) Filtrado FIR/IIR a la frecuencia de bit}
+
+Se diseñaron un filtro FIR pasabajas de orden 50 (\texttt{firwin}) y un Butterworth IIR de orden menor a 10 (\texttt{butter}), ambos con corte en la frecuencia de bit $1/T = 1$ kHz y aplicados en fase cero con \texttt{filtfilt} directamente sobre la señal cruda. Como muestra la Fig.~\ref{fig:punto2_t2a_spectrum}, la energía de la señal OOK, $\text{envolvente}(t)\sin(2\pi f_c t)$ con $f_c = 10$ kHz, se concentra alrededor de la portadora y no en 1 kHz, donde el espectro es prácticamente vacío. Por ello un pasabajas de 1 kHz solo elimina la portadora y deja una traza casi plana o ruidosa, sin la onda cuadrada de bits (Fig.~\ref{fig:punto2_t2a_filtered}). Para recuperar la envolvente es necesario demodular antes de filtrar.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{punto2_t2a_spectrum.png}
+\caption{Espectro FFT de la señal OOK: la energía se concentra cerca de la portadora de 10 kHz.}
+\label{fig:punto2_t2a_spectrum}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{punto2_t2a_filtered_bit_rate.png}
+\caption{Salidas de los filtros FIR (orden 50) e IIR (Butterworth) con corte en 1 kHz sobre la señal cruda: no aparece el patrón cuadrado.}
+\label{fig:punto2_t2a_filtered}
+\end{figure}
+
+\subsubsection{(b) Envolvente de Hilbert y reconstrucción de bits}
+
+La magnitud de la señal analítica (\texttt{scipy.signal.hilbert}) entrega la envolvente on/off. Esta se suaviza con un pasabajas a $0.3/T$ para eliminar el rizado de portadora conservando las transiciones. Luego se promedia la envolvente en cada ventana de 1 ms y los 144 promedios se separan en dos grupos (alto/bajo) con un 2-means unidimensional; el umbral adaptativo es el punto medio entre los centroides convergidos, de modo que se autocalibra a los niveles reales de la señal. La Fig.~\ref{fig:punto2_t2b} muestra la señal cruda, la magnitud de Hilbert y la onda cuadrada reconstruida.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{punto2_t2b_hilbert_bits.png}
+\caption{Señal cruda, magnitud de Hilbert y onda cuadrada reconstruida a partir de los bits detectados.}
+\label{fig:punto2_t2b}
+\end{figure}
+
+\subsubsection{(c) Decodificación ASCII}
+
+Los 144 bits recuperados se agrupan en 18 bytes de 8 bits. Se evaluaron los 16 candidatos posibles (8 desfases de bit $\times$ {MSB primero, LSB primero}) puntuando por cantidad de bytes ASCII imprimibles. La única combinación con 18/18 bytes imprimibles es desfase 0 con MSB primero; el resto obtuvo puntajes muy inferiores (Tabla~\ref{tab:punto2_decode}). El mensaje decodificado es
+
+\begin{center}
+\texttt{El Rey Leon (1994)}
+\end{center}
+
+\begin{table}[!t]
+\centering
+\caption{Búsqueda de desfase y orden de bits.}
+\label{tab:punto2_decode}
+\begin{tabular}{lcc}
+\toprule
+Configuración & Candidatos & Imprimibles \\
+\midrule
+Desfase 0, MSB primero & 1 & 18/18 \\
+Otros desfases y LSB primero & 15 & muy inferior \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Para validar el pipeline (envolvente $\to$ suavizado $\to$ umbral por bit $\to$ ASCII) se construyó una señal OOK sintética con la cadena conocida \texttt{Hi DSP!}, y la prueba automática de ida y vuelta recupera exactamente esa cadena (desfase 0, MSB primero). Las 5 pruebas del laboratorio pasan.

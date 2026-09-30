@@ -1,0 +1,118 @@
+% ============================================================
+% PUNTO 3: Filtrado espacial de imágenes con núcleos 2D
+% ============================================================
+
+\subsection{Punto 3: Filtrado espacial de una imagen con núcleos 2D}
+
+\subsubsection{Descripción del código}
+
+El código adjunto (\texttt{cod01.py}) carga una imagen, la convierte a
+escala de grises y le aplica convolución discreta 2D mediante
+\texttt{cv2.filter2D} con núcleos fijos de $5\times5$: un núcleo
+promediador (\texttt{kernel\_pasa\_bajas}, todos los coeficientes iguales
+a $0.04$), dos núcleos con centro positivo fuerte y entorno negativo
+(\texttt{kernel\_pasa\_altas00} y \texttt{kernel\_pasa\_altas02}) y una
+cascada pasa-bajas seguida de pasa-altas denominada ``Filtro Pasa
+Bandas''. Como el código original usa \texttt{cv2.imshow}, se adaptó a un
+entorno sin ventana gráfica guardando cada resultado como imagen, sin
+modificar los núcleos ni las llamadas a \texttt{filter2D}. Se empleó como
+entrada una fotografía real de una tarjeta débito sobre una mesa de
+madera (Fig.~\ref{fig:t2p3_orig}), que aporta bordes nítidos (logotipo,
+chip, contorno de la tarjeta), regiones planas (el fondo amarillo) y
+textura fina (la veta de la madera).
+
+Las sumas de coeficientes, calculadas numéricamente y verificadas con
+pruebas automáticas, son: \texttt{kernel\_pasa\_bajas} $=1.0$,
+\texttt{kernel\_pasa\_altas00} $=1.0$, \texttt{kernel\_pasa\_altas02}
+$=0.0$ y el núcleo nuevo del inciso (b) $=0.0$. Nótese que
+\texttt{kernel\_pasa\_altas00}, pese a su nombre, no suma cero.
+
+\begin{figure}[!t]
+\centering
+\begin{minipage}{0.48\columnwidth}
+\centering
+\includegraphics[width=\linewidth]{punto3_00_original.png}
+\end{minipage}\hfill
+\begin{minipage}{0.48\columnwidth}
+\centering
+\includegraphics[width=\linewidth]{punto3_01_pasa_bajas.png}
+\end{minipage}
+\caption{Imagen de entrada en escala de grises (izquierda) y resultado del filtro pasa-bajas de $5\times5$ (derecha): la veta de la madera y los bordes se suavizan, pero el brillo medio se conserva.}
+\label{fig:t2p3_orig}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\begin{minipage}{0.48\columnwidth}
+\centering
+\includegraphics[width=\linewidth]{punto3_02_pasa_altas00.png}
+\end{minipage}\hfill
+\begin{minipage}{0.48\columnwidth}
+\centering
+\includegraphics[width=\linewidth]{punto3_03_pasa_altas02.png}
+\end{minipage}
+\caption{Resultado de \texttt{kernel\_pasa\_altas00} (izquierda, suma $=1$) y \texttt{kernel\_pasa\_altas02} (derecha, suma $=0$).}
+\label{fig:t2p3_altas}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\begin{minipage}{0.48\columnwidth}
+\centering
+\includegraphics[width=\linewidth]{punto3_04_pasa_bandas.png}
+\end{minipage}\hfill
+\begin{minipage}{0.48\columnwidth}
+\centering
+\includegraphics[width=\linewidth]{punto3_05_kernel_nuevo.png}
+\end{minipage}
+\caption{Cascada pasa-bajas más \texttt{kernel\_pasa\_altas02} (izquierda) y núcleo nuevo de suma cero, Laplaciano de $3\times3$ (derecha).}
+\label{fig:t2p3_nuevo}
+\end{figure}
+
+\subsubsection{(a) ¿Se puede considerar un filtro?}
+
+Sí. La convolución con un núcleo fijo es, por definición, un filtro lineal
+e invariante al desplazamiento: la operación
+$y[m,n]=\sum_i\sum_j h[i,j]\,x[m-i,n-j]$ es la misma convolución de un
+filtro FIR unidimensional, aplicada sobre dos ejes. Cada núcleo es una
+respuesta al impulso de soporte finito, equivalente al vector de
+coeficientes de un FIR. El núcleo pasa-bajas (suma $1$, todos positivos)
+es un promedio móvil bidimensional: atenúa las frecuencias espaciales
+altas (bordes y textura fina) y conserva el brillo local, como se observa
+en la Fig.~\ref{fig:t2p3_orig}. Los núcleos con centro positivo y entorno
+negativo se comportan como un Laplaciano discreto: responden donde el
+brillo cambia rápido (contorno de la tarjeta, letras, chip) y poco en
+regiones uniformes. \texttt{kernel\_pasa\_altas02} (Fig.~\ref{fig:t2p3_altas},
+derecha) deja el fondo amarillo casi negro y solo resalta los bordes,
+mientras que \texttt{kernel\_pasa\_altas00} (izquierda) conserva la imagen
+completa y añade realce de detalle, porque su suma es $1$ y por tanto aún
+deja pasar la componente de continua. La cascada (Fig.~\ref{fig:t2p3_nuevo},
+izquierda) actúa como un pasa-bandas: primero elimina el ruido de muy alta
+frecuencia y luego extrae los bordes, produciendo líneas más limpias y
+tenues que \texttt{kernel\_pasa\_altas02} solo.
+
+\subsubsection{(b) Cambio de la matriz con suma cero}
+
+Se definió un núcleo nuevo, cuadrado y de suma cero, el Laplaciano
+discreto de $3\times3$:
+\begin{equation}
+h=\begin{bmatrix}1&1&1\\1&-8&1\\1&1&1\end{bmatrix},\qquad
+\sum_{i,j}h[i,j]=0.
+\end{equation}
+Un núcleo de suma cero no tiene ganancia en continua: sobre una región
+uniforme de $128$ niveles de gris la salida de \texttt{filter2D} es
+exactamente $0$ en todo el interior (verificado con una prueba
+automática), sin importar el brillo original, y sobre un borde abrupto la
+respuesta es grande ($|y|>20$). El núcleo se convierte así en un detector
+de bordes puro que descarta la información de brillo. Comparado sobre la
+misma región plana, \texttt{kernel\_pasa\_altas00} (suma $1$) devuelve
+$128$, mientras que \texttt{kernel\_pasa\_altas02} y el núcleo nuevo
+(suma $0$) devuelven $0$. En la imagen real (Fig.~\ref{fig:t2p3_nuevo},
+derecha) el fondo y el interior de la tarjeta quedan negros y solo
+permanecen los contornos, más finos y tenues que con el núcleo de
+$5\times5$ porque el soporte es menor. Al cambiar los valores del núcleo
+manteniendo suma cero, las regiones planas siempre desaparecen; lo que
+cambia es la intensidad y el patrón con que responden los bordes. Además,
+como \texttt{filter2D} trabaja con salida \texttt{uint8}, las respuestas
+negativas se saturan a $0$ y solo se visualiza la parte positiva de la
+respuesta al borde.

@@ -1,0 +1,26 @@
+% CONCLUSIONES
+
+\section{Conclusiones}
+\label{sec:conclusiones}
+
+En los puntos 1 y 2 el resultado central es el mismo: en una señal
+modulada, la información no está en el espectro a la frecuencia del
+mensaje o de los bits, sino alrededor de la portadora. Por eso un filtro
+FIR de orden 50 o un Butterworth de orden menor a 10 centrado en 3~kHz
+(punto 1) o en 1~kHz (punto 2) y aplicado directamente sobre la señal
+cruda no recupera la senoidal ni la onda cuadrada. Primero hay que
+demodular, aquí con la magnitud de la transformada de Hilbert, y solo
+después filtrar la envolvente.
+
+Las frecuencias se midieron de los datos: portadora de 20~kHz y mensaje de
+3~kHz en el punto 1, con bandas laterales en 17 y 23~kHz que confirman la
+estructura AM. En el punto 2, la decodificación se validó con una prueba
+de ida y vuelta sobre una señal OOK sintética de mensaje conocido y con la
+búsqueda exhaustiva de alineación de byte y orden de bits, cuyo único
+candidato con 18 de 18 caracteres imprimibles es
+``El Rey Leon (1994)''.
+
+En el punto 3, un núcleo cuya suma es cero elimina la componente de
+continua, de modo que las regiones uniformes se anulan y solo responden
+los bordes; el nombre de un núcleo no garantiza esta propiedad, como
+muestra \texttt{kernel\_pasa\_altas00}, cuya suma real es $1$.

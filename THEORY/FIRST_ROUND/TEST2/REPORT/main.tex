@@ -1,0 +1,83 @@
+% ============================================================
+% Informe TEST2 — demodulación AM/OOK con transformada de Hilbert,
+% filtros FIR/IIR y filtrado espacial de imágenes.
+%
+% Mismo formato IEEEtran (conference) que WORK/REPORT/main.tex.
+% Para compilar (Overleaf): pdflatex main.tex, dos pasadas.
+% Las figuras están en figuras/ con prefijo por punto (punto1_, punto2_,
+% punto3_).
+% ============================================================
+
+\documentclass[conference]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+
+\usepackage{cite}
+\usepackage{url}
+
+\usepackage{xcolor}
+
+\graphicspath{{figuras/}}
+
+\title{
+Demodulación de señales AM y OOK mediante la transformada de Hilbert,
+filtros FIR/IIR y filtrado espacial de imágenes: informe TEST2
+}
+
+\author{
+\IEEEauthorblockN{1\textsuperscript{st} Daniel García Araque}
+\IEEEauthorblockA{
+\textit{Programa de Ingeniería Mecatrónica}\\
+\textit{Universidad Militar Nueva Granada}\\
+Bogotá, Colombia\\
+Cód. 7004185\\
+est.daniel.garciaa@unimilitar.edu.co
+}
+\and
+\IEEEauthorblockN{2\textsuperscript{nd} Karol Tatiana Fernández Neme}
+\IEEEauthorblockA{
+\textit{Programa de Ingeniería Mecatrónica}\\
+\textit{Universidad Militar Nueva Granada}\\
+Bogotá, Colombia\\
+Cód. 7004191\\
+est.karol.fernandez@unimilitar.edu.co
+}
+\and
+\IEEEauthorblockN{3\textsuperscript{rd} Santiago Rubiano Garzón}
+\IEEEauthorblockA{
+\textit{Programa de Ingeniería Mecatrónica}\\
+\textit{Universidad Militar Nueva Granada}\\
+Bogotá, Colombia\\
+Cód. 7004197\\
+est.santiago.rigia@unimilitar.edu.co
+}
+}
+
+\begin{document}
+
+\maketitle
+
+\input{secciones/resumen}
+\input{secciones/introduccion}
+
+\section{Resultados por punto}
+\label{sec:resultados}
+
+\input{secciones/punto_1}
+\input{secciones/punto_2}
+\input{secciones/punto_3}
+
+\input{secciones/conclusiones}
+\input{secciones/referencias}
+
+\end{document}

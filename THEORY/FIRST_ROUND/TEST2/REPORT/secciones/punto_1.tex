@@ -1,0 +1,76 @@
+% ============================================================
+% TEST2 Punto 1: AM, transformada de Hilbert y filtros FIR/IIR
+% ============================================================
+
+\subsection{Punto 1: Modulación AM, transformada de Hilbert y filtros FIR/IIR}
+
+Este punto analiza la señal \texttt{01\_1\_modulated\_signal\_20.0\_200.0\_40.0.csv}: se revisa la modulación AM, se miden sobre los datos la portadora y el mensaje, se extrae la envolvente con la transformada de Hilbert filtrada con FIR e IIR, y se explica por qué un filtro centrado en la frecuencia del mensaje aplicado a la señal cruda no recupera el seno.
+
+\subsubsection{(a) Revisión de la modulación AM}
+
+En AM una señal mensaje de baja frecuencia $m(t)$ modula la amplitud de una portadora senoidal de alta frecuencia:
+\begin{equation}
+x(t) = \left[A_c + m(t)\right]\cos(2\pi f_c t).
+\label{eq:t2p1_am}
+\end{equation}
+En frecuencia, el espectro de $m(t)$ se desplaza a $\pm f_c$: $x(t)$ tiene la portadora en $f_c$ y dos bandas laterales en $f_c \pm f_{msg}$, pero ninguna componente aislada en $f_{msg}$. Para recuperar $m(t)$ se usa detección de envolvente: la señal analítica $x_a(t) = x(t) + j\,\mathcal{H}\{x(t)\}$ tiene magnitud $|x_a(t)|$ que sigue a $A_c + m(t)$ mientras $f_c \gg$ el ancho de banda de $m(t)$, condición que aquí se cumple (portadora 20 kHz frente a mensaje de unos 3 kHz).
+
+\subsubsection{(b) Frecuencias de portadora y mensaje}
+
+Los valores se midieron directamente de los datos, no del nombre del archivo. La frecuencia de muestreo, $f_s = 1/\overline{\Delta t} = 200000{,}0$ Hz, y la duración, 39,995 ms (8000 muestras), coinciden con los valores nominales. El pico dominante de la FFT de la señal cruda está en \textbf{20000,0 Hz} (portadora), con bandas laterales simétricas en 17000 Hz y 23000 Hz, lo que confirma la estructura AM (Fig.~\ref{fig:t2p1_raw}). De las bandas laterales, $f_{msg} = 20000 - 17000 = $ \textbf{3000 Hz}, confirmado de forma independiente por la FFT de la magnitud de Hilbert, cuyo pico dominante fuera de DC está en 3000,0 Hz (Fig.~\ref{fig:t2p1_env}).
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{punto1_p1_b_spectrum_raw.png}
+\caption{Espectro de la señal AM cruda: portadora en 20 kHz y bandas laterales en 17 y 23 kHz.}
+\label{fig:t2p1_raw}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{punto1_p1_b_spectrum_envelope.png}
+\caption{Espectro de la envolvente de Hilbert: el pico dominante (fuera de DC) está en 3 kHz.}
+\label{fig:t2p1_env}
+\end{figure}
+
+\subsubsection{(c) Envolvente de Hilbert con filtro FIR}
+
+Se calculó $|x_a(t)|$ con \texttt{scipy.signal.hilbert} y se filtró con un pasabajas FIR (\texttt{firwin}, fase cero con \texttt{filtfilt}) de corte 5000 Hz: por encima de los 3000 Hz del mensaje para no distorsionarlo y muy por debajo de los 20000 Hz de la portadora residual (Fig.~\ref{fig:t2p1_fir}).
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{punto1_p1_c_hilbert_fir.png}
+\caption{Magnitud de Hilbert de la señal AM filtrada con un pasabajas FIR (corte 5 kHz).}
+\label{fig:t2p1_fir}
+\end{figure}
+
+\subsubsection{(d) Envolvente de Hilbert con filtro IIR}
+
+El mismo procedimiento con un pasabajas IIR Butterworth (\texttt{butter}, \texttt{filtfilt}), también con corte en 5000 Hz (Fig.~\ref{fig:t2p1_iir}).
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{punto1_p1_d_hilbert_iir.png}
+\caption{Magnitud de Hilbert de la señal AM filtrada con un pasabajas IIR Butterworth (corte 5 kHz).}
+\label{fig:t2p1_iir}
+\end{figure}
+
+\subsubsection{(e) Filtrado en $f_{msg}$ sobre la señal cruda}
+
+Se diseñaron un pasabanda FIR de orden 50 y uno IIR Butterworth de orden 4, ambos centrados en $f_{msg} = 3000$ Hz (banda de 2500 a 3500 Hz), y se aplicaron a la señal AM cruda. Como muestran la Fig.~\ref{fig:t2p1_raw} y el panel inferior de la Fig.~\ref{fig:t2p1_target}, el espectro de $x(t)$ no tiene energía en 3000 Hz: su contenido está en 20 kHz y en 17/23 kHz, como predice la ecuación~\eqref{eq:t2p1_am}. Por eso el filtro no aísla ninguna componente del mensaje y solo deja pasar ruido numérico y fuga espectral, con amplitud muy inferior a la de la portadora; ni la salida FIR ni la IIR se parece a un seno de 3 kHz. El mensaje solo se recupera demodulando primero (Hilbert) para trasladarlo a banda base y filtrando después, como en (c) y (d).
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{punto1_p1_e_targeted_filter.png}
+\caption{Pasabanda FIR (orden 50) e IIR (Butterworth, orden 4) en 3 kHz aplicados a la señal cruda: no recuperan un seno limpio.}
+\label{fig:t2p1_target}
+\end{figure}
+
+\subsubsection{(f) Diferencias entre FIR e IIR}
+
+\begin{itemize}
+\item \textbf{Fase:} el FIR (\texttt{firwin}) es de fase lineal por diseño y el Butterworth de fase no lineal; al aplicar ambos con \texttt{filtfilt} la distorsión de fase neta se cancela, por lo que las diferencias visibles se deben a la forma del filtro.
+\item \textbf{Transición:} para un mismo orden bajo, el Butterworth de orden 4 logra una banda de transición más angosta que el FIR de orden 50, a costa de fase no lineal y de posible inestabilidad numérica a órdenes altos.
+\item \textbf{Rizado:} el FIR con ventana de Hamming tiene rizado moderado y predecible; el Butterworth es monótono en la banda de paso, pero cae más lentamente cerca del corte que un Chebyshev o elíptico del mismo orden.
+\item \textbf{Estabilidad:} el FIR es siempre estable; el IIR depende de la ubicación de los polos, sin problema en el orden 4 usado aquí.
+\end{itemize}

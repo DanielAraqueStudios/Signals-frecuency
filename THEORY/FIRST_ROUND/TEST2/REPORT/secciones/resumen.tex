@@ -1,0 +1,30 @@
+% RESUMEN
+
+\begin{abstract}
+
+Este informe presenta la solución de la evaluación TEST2, compuesta por
+tres puntos. En el primero se analiza una señal de modulación de amplitud
+(AM) almacenada en un archivo CSV: a partir de su espectro se midieron una
+portadora de 20~kHz y un tono transmitido de 3~kHz (con bandas laterales
+en 17 y 23~kHz), y se recuperó la envolvente mediante la magnitud de la
+transformada de Hilbert seguida de filtros FIR e IIR pasa-bajas. Se
+explica por qué un filtro centrado en la frecuencia del mensaje aplicado
+directamente sobre la señal modulada no recupera la senoidal. En el
+segundo punto se decodifica un mensaje transmitido por modulación de
+encendido y apagado (OOK) a 1~kbit/s sobre una portadora de 10~kHz: la
+envolvente de Hilbert se suaviza, se promedia por bit y se umbraliza,
+obteniendo 144 bits que forman 18 bytes ASCII y la frase
+``El Rey Leon (1994)''. En el tercer punto se ejecuta un código de filtrado
+espacial con núcleos de $5\times5$ sobre una fotografía real, se justifica
+que la convolución 2D es un filtro y se estudia el efecto de un núcleo
+cuadrado de suma cero. Todos los valores y figuras provienen de la
+ejecución real del código sobre los archivos entregados.
+
+\end{abstract}
+
+\begin{IEEEkeywords}
+
+Modulación AM, modulación OOK, transformada de Hilbert, filtros FIR,
+filtros IIR, decodificación ASCII, convolución 2D, filtrado espacial.
+
+\end{IEEEkeywords}
