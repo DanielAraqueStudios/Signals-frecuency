@@ -1,0 +1,5 @@
+# Training-only dependencies. NOT part of the FastAPI server's requirements.txt —
+# torch/ultralytics are heavy and this step is optional/offline.
+# Best known-good pin as of this writing; verify against https://pypi.org/project/ultralytics/ if it fails to install.
+ultralytics==8.3.0
+pyyaml==6.0.2

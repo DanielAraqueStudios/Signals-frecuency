@@ -1,0 +1,8 @@
+path: .
+train: dataset/images/train
+val: dataset/images/val
+names:
+  0: brocas
+  1: escariadores
+  2: tornillos
+  3: broca_centropunto

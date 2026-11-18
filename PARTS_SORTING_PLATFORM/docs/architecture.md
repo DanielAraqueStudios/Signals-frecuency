@@ -21,11 +21,12 @@ mobile app:
   storage (S3-compatible bucket via `api-gateway`). See
   `../CLOUD_MODE/README.md` (root readme) and this doc's "Cloud mode data
   flow" below.
-- **`LOCAL_MODE/`** -- a closed LAN, single-computer setup: the phone,
-  the ESP32, and a "computer" (`local-server`) all join the same
-  predefined WiFi access point. No auth, no TLS, no MQTT -- plain,
-  explicitly unsecured HTTP, with an API surface of exactly **GET and
-  PUT**. See `../LOCAL_MODE/local-server/README.md`.
+- **`LOCAL_MODE/`** -- a closed LAN, single-computer setup: the Android
+  **phone creates a WiFi hotspot**, and the ESP32 and the "computer"
+  (`local-server`) both join it as clients. No auth, no TLS, no MQTT --
+  plain, explicitly unsecured HTTP, with an API surface of exactly **GET
+  and PUT**. See `../LOCAL_MODE/local-server/README.md` and
+  `../LOCAL_MODE/NETWORK_SETUP.md` for the hotspot/IP details.
 
 Pick one mode per deployment; they don't talk to each other. Both run the
 *same* frequency-spectrum classification code, just wrapped differently
@@ -90,14 +91,23 @@ MQTT still does real work here: it's the transport from
                         [ESP32 firmware polls GET /images/latest]
 ```
 
-All three devices (phone, local-server's computer, ESP32) are joined to
-the **same predefined WiFi access point**. There is no auth, no TLS, no
-MQTT broker -- this is intentional for a closed lab/demo network, spelled
-out explicitly in `../LOCAL_MODE/local-server/README.md`, not a shortcut
-to harden later. The API is deliberately just two HTTP methods: **PUT**
-(phone uploads an image, gets the classification back synchronously) and
-**GET** (ESP32 or phone reads the latest/a specific result). There's no
-push mechanism, so the ESP32 polls on a timer.
+The **Android phone itself creates the WiFi hotspot**; local-server's
+computer and the ESP32 both join that hotspot as ordinary clients -- there
+is no separate router/access point in this mode. There is no auth, no
+TLS, no MQTT broker -- this is intentional for a closed lab/demo network,
+spelled out explicitly in `../LOCAL_MODE/local-server/README.md`, not a
+shortcut to harden later. The API is deliberately just two HTTP methods:
+**PUT** (phone uploads an image, gets the classification back
+synchronously) and **GET** (ESP32 or phone reads the latest/a specific
+result). There's no push mechanism, so the ESP32 polls on a timer.
+
+A phone hotspot behaves differently from a normal router on two points
+that matter here (see `../LOCAL_MODE/NETWORK_SETUP.md` for the full
+detail): client IPs handed out by the phone's DHCP are usually not static
+by default, which complicates giving the ESP32 a fixed address for
+local-server; and most ESP32/ESP32-S3 boards only support 2.4GHz WiFi, so
+the hotspot must be forced to 2.4GHz/compatibility mode if the phone
+defaults to 5GHz or dual-band.
 
 ## Frequency-spectrum classification (shared/spectrum_classifier.py)
 
@@ -147,4 +157,8 @@ see git history if you need the old ML-based approach.
   Mosquitto's dynamic-security plugin.
 - **No physical sorting/actuation**, in either mode.
 - **Local mode has no discovery mechanism** -- the ESP32 firmware needs
-  `local-server`'s LAN IP hardcoded/reserved via DHCP.
+  `local-server`'s LAN IP hardcoded, and a phone hotspot generally can't
+  do DHCP reservation the way a router's admin page can. See
+  `../LOCAL_MODE/NETWORK_SETUP.md` for the practical options (manual
+  static IP, reading the lease from the hotspot's connected-devices
+  screen, or mDNS as a future improvement).
