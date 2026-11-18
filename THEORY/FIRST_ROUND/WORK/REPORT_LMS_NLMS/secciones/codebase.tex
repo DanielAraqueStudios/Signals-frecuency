@@ -1,0 +1,103 @@
+\section{Organización del código y pipeline}
+\label{sec:codebase}
+
+Ambos trabajos siguen la misma convención de estructura usada en el
+resto de \texttt{WORK/} del repositorio: un paquete Python por
+laboratorio, con un módulo por responsabilidad en lugar de un único
+archivo monolítico, un \texttt{main.py} que orquesta la ejecución de
+las tareas numeradas y persiste las figuras resultantes, y una carpeta
+\texttt{tests/} independiente con verificaciones numéricas reales
+sobre propiedades de convergencia conocidas de antemano, en lugar de
+pruebas que solo comprueban que el código no lance una excepción. Esta
+separación entre el código de demostración (\texttt{main.py}, pensado
+para producir las figuras de este informe) y el código de
+verificación (\texttt{tests/}, pensado para ejecutarse de forma
+automatizada y repetible) refleja una práctica deliberada de
+ingeniería de software aplicada a experimentación numérica: el hecho
+de que una figura "se vea razonable" no sustituye a una aserción
+numérica explícita sobre el comportamiento esperado del algoritmo.
+
+\begin{figure*}[!t]
+\centering
+\begin{verbatim}
+WORK_ELEVEN/                              WORK_TWELVE/
+|-- lms_lab/                              |-- nlms_lab/
+|   |-- signals.py    (senales de prueba) |   |-- signals.py    (senales de prueba)
+|   |-- unknown_system.py (sistema FIR    |   |-- noise.py      (ruido aditivo)
+|   |            desconocido a identificar)   |-- adaptive.py   (NLMS y LMS, desde cero)
+|   |-- lms.py        (regla LMS, desde   |   |-- audio.py      (carga perezosa librosa)
+|   |            cero: run_lms)           |   `-- plotting.py
+|   |-- audio.py      (carga perezosa     |-- audio_samples/gato/
+|   |            librosa)                 |-- tests/
+|   `-- plotting.py                       |   |-- test_adaptive.py
+|-- audio_samples/gato/                   |   `-- test_signals.py
+|-- tests/                                `-- main.py
+|   |-- test_signals.py
+|   |-- test_unknown_system.py
+|   |-- test_lms.py
+|   `-- test_mu_convergence.py
+`-- main.py
+\end{verbatim}
+\caption{Estructura de directorios de WORK\_ELEVEN (LMS) y WORK\_TWELVE (NLMS). Ambas carpetas son completamente independientes entre sí: ninguna importa código de la otra.}
+\label{fig:codebase_tree}
+\end{figure*}
+
+El flujo de procesamiento (\textit{pipeline}) es el mismo en ambos
+trabajos y se ejecuta íntegramente dentro de \texttt{main.py} al
+invocar cada tarea:
+
+\begin{enumerate}
+  \item \textbf{Generación de señales} (\texttt{signals.py}): se
+  construyen las señales de prueba (tono, ruido blanco, señal de
+  potencia variable) y, para las tareas de cancelación de ruido, se
+  carga el audio real de referencia (\texttt{audio.py}).
+  \item \textbf{Sistema/ruido de referencia}: en el caso de
+  identificación de sistema, \texttt{unknown\_system.py} (WORK\_ELEVEN)
+  o la definición equivalente en \texttt{adaptive.py} (WORK\_TWELVE)
+  aplica un filtro FIR desconocido a la señal de entrada para producir
+  la señal deseada $d[n]$; en el caso de cancelación de ruido,
+  \texttt{noise.py} agrega ruido aditivo correlacionado a la señal
+  limpia.
+  \item \textbf{Filtrado adaptativo}: \texttt{lms.py}
+  (\texttt{run\_lms}, WORK\_ELEVEN) o \texttt{adaptive.py}
+  (\texttt{nlms\_filter}, WORK\_TWELVE) ejecuta la regla de
+  actualización correspondiente (Ec.~\ref{eq:lms} o
+  Ec.~\ref{eq:nlms}) muestra a muestra, devolviendo la salida
+  estimada, el error en cada iteración y la evolución de los pesos.
+  \item \textbf{Visualización} (\texttt{plotting.py}): cada tarea de
+  \texttt{main.py} llama a una función de graficado dedicada que
+  guarda la figura correspondiente en \texttt{output/}.
+  \item \textbf{Verificación} (\texttt{tests/}): de forma
+  independiente al pipeline de \texttt{main.py}, los tests de
+  \texttt{pytest} ejecutan el mismo algoritmo sobre casos sintéticos
+  con resultado conocido de antemano (p.\,ej. coeficientes de un
+  sistema FIR fijo) y comprueban numéricamente la convergencia, en
+  lugar de solo verificar que el código no lance una excepción.
+\end{enumerate}
+
+En WORK\_ELEVEN, \texttt{lms\_lab/lms.py} concentra la totalidad de la
+lógica del algoritmo en una sola función (\texttt{run\_lms}), que
+recibe la señal de entrada, la señal deseada y el tamaño de paso, y
+devuelve tanto la historia completa de pesos como la señal de error —
+exponiendo deliberadamente el estado interno del filtro en cada
+iteración, en lugar de devolver únicamente el resultado final, para
+que las funciones de graficado y las pruebas puedan inspeccionar la
+trayectoria completa de convergencia y no solo su punto final.
+\texttt{unknown\_system.py} define los coeficientes del sistema FIR
+desconocido como una constante del módulo, de forma que tanto
+\texttt{main.py} como los tests de \texttt{tests/test\_unknown\_system.py}
+referencian el mismo valor de verdad conocida, evitando duplicar un
+número "mágico" en dos lugares que podrían desincronizarse.
+
+En WORK\_TWELVE, \texttt{nlms\_lab/adaptive.py} contiene dos funciones:
+\texttt{nlms\_filter}, con la regla de actualización normalizada
+(Ec.~\ref{eq:nlms}), y \texttt{lms\_filter}, una reimplementación
+mínima del algoritmo LMS plano usada únicamente como punto de
+comparación en la Sección~\ref{sec:nlms_vs_lms} —se decidió duplicar
+esta pequeña pieza de código en lugar de importarla de WORK\_ELEVEN
+precisamente para que cada carpeta de trabajo permanezca
+autocontenida y pueda ejecutarse, probarse y calificarse de forma
+completamente independiente, sin que un cambio futuro en un trabajo
+pueda romper silenciosamente al otro. \texttt{noise.py} centraliza la
+generación de ruido aditivo gaussiano reutilizada por las tareas de
+cancelación de ruido y por los propios tests.

@@ -1,0 +1,55 @@
+\section{Conclusiones}
+\label{sec:conclusiones}
+
+Los dos filtros adaptativos implementados desde cero en este informe
+—LMS en WORK\_ELEVEN y NLMS en WORK\_TWELVE— lograron identificar
+ciegamente un sistema FIR desconocido a partir únicamente de pares
+entrada/salida, recuperando sus coeficientes reales con un error
+prácticamente nulo, y cancelar ruido correlacionado tanto sobre una
+señal sintética de banda angosta como sobre una grabación de audio
+real de contenido espectral más complejo. Estos resultados confirman
+experimentalmente, con implementaciones propias y auditables, que el
+mecanismo de descenso de gradiente estocástico subyacente a ambos
+algoritmos converge de forma robusta en problemas representativos de
+identificación de sistemas y cancelación de ruido, sin depender de una
+función de filtrado adaptativo ya empaquetada por una librería externa
+cuyo funcionamiento interno permanecería opaco.
+
+El análisis de convergencia de LMS frente al tamaño de paso $\mu$
+confirmó de forma cuantitativa la cota teórica de estabilidad
+$\mu < 2/\lambda_{\max}$: la convergencia observada fue lenta para
+$\mu$ muy por debajo de esa cota, rápida y estable para valores
+intermedios, y francamente divergente para un $\mu$ ligeramente por
+encima del límite teórico calculado para esta configuración
+experimental ($\approx 0.4$). Este resultado es relevante más allá de
+su valor demostrativo inmediato: evidencia que la elección del tamaño
+de paso en un sistema LMS real no puede hacerse de forma arbitraria o
+puramente empírica, sino que debe fundamentarse en una estimación,
+aunque sea aproximada, de la potencia de la señal de entrada y del
+número de coeficientes del filtro.
+
+La comparación directa entre NLMS y LMS bajo una señal de entrada con
+potencia no estacionaria constituye el resultado más significativo de
+este informe desde el punto de vista práctico: bajo las mismas
+condiciones de entrada y el mismo sistema desconocido, LMS con un
+$\mu$ fijo —elegido para ser estable en el segmento de mayor
+potencia— exhibió un error de identificación aproximadamente 34 veces
+mayor que NLMS en el segmento de menor potencia. Esta diferencia no es
+un artefacto de la elección particular de parámetros del experimento,
+sino la consecuencia directa y esperada de la normalización por
+energía instantánea que define a NLMS, y constituye la razón
+estructural —no meramente una preferencia de implementación— por la
+cual NLMS es el algoritmo de elección en la inmensa mayoría de
+aplicaciones reales de filtrado adaptativo sobre señales no
+estacionarias en potencia, como la voz humana o los canales de
+comunicación con desvanecimiento.
+
+Como trabajo futuro, resultaría natural extender ambos laboratorios
+con una variante de paso variable adicional, como LMS normalizado con
+factor de olvido (\textit{leaky NLMS}) para mejorar la robustez frente
+a sistemas desconocidos que cambian lentamente en el tiempo, o con
+RLS (\textit{Recursive Least Squares}) como punto de comparación de
+convergencia mucho más rápida a costa de un mayor costo computacional
+por iteración —un compromiso distinto al explorado aquí, pero
+igualmente relevante en la práctica del procesamiento adaptativo de
+señales.

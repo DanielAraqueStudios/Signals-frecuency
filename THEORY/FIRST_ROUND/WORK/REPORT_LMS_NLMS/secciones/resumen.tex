@@ -1,0 +1,20 @@
+\begin{abstract}
+Este informe presenta la implementación desde cero, en Python/NumPy y
+sin recurrir a funciones de filtrado adaptativo ya empaquetadas por
+una librería externa, de dos algoritmos adaptativos clásicos: LMS
+(\textit{Least Mean Squares}) en WORK\_ELEVEN y NLMS (\textit{Normalized
+LMS}) en WORK\_TWELVE. Ambos se caracterizan sobre tres problemas
+representativos del filtrado adaptativo: identificación ciega de un
+sistema FIR desconocido a partir únicamente de pares entrada/salida,
+cancelación adaptativa de ruido sobre un tono sintético de 60~Hz y
+sobre una grabación de audio real, y el análisis cuantitativo de la
+convergencia frente al tamaño de paso del algoritmo. Adicionalmente,
+WORK\_TWELVE incorpora una comparación directa y cuantitativa entre
+NLMS y una reimplementación local de LMS bajo una señal de entrada cuya
+potencia cambia abruptamente a mitad del experimento, cuantificando en
+aproximadamente 34 veces la ventaja de error de NLMS en el segmento de
+menor potencia y evidenciando así la razón estructural —la
+normalización del paso por la energía instantánea de la entrada— por
+la cual NLMS resulta preferible a LMS en aplicaciones reales sobre
+señales no estacionarias, como la voz.
+\end{abstract}

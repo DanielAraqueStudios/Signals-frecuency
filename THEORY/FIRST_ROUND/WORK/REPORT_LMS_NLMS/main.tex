@@ -1,0 +1,63 @@
+% ============================================================
+% Informe LMS/NLMS — cubre unicamente WORK_ELEVEN (LMS) y
+% WORK_TWELVE (NLMS).
+%
+% Mismo formato IEEEtran (conference) que WORK/REPORT/main.tex.
+% Para compilar (Overleaf): pdflatex main.tex, dos pasadas.
+% ============================================================
+
+\documentclass[conference]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+
+\usepackage{cite}
+\usepackage{url}
+
+\usepackage{xcolor}
+
+\graphicspath{{figuras/}}
+
+\title{
+Filtrado adaptativo LMS y NLMS: identificación de sistemas,
+cancelación de ruido y análisis de convergencia
+}
+
+\author{
+\IEEEauthorblockN{1\textsuperscript{st} Daniel García Araque}
+\IEEEauthorblockA{
+\textit{Programa de Ingeniería Mecatrónica}\\
+\textit{Universidad Militar Nueva Granada}\\
+Bogotá, Colombia\\
+Cód. 7004185\\
+est.daniel.garciaa@unimilitar.edu.co
+}
+}
+
+\begin{document}
+
+\maketitle
+
+\input{secciones/resumen}
+\input{secciones/introduccion}
+\input{secciones/codebase}
+
+\section{Resultados por trabajo}
+\label{sec:resultados}
+
+\input{secciones/work_eleven}
+\input{secciones/work_twelve}
+
+\input{secciones/conclusiones}
+\input{secciones/referencias}
+
+\end{document}

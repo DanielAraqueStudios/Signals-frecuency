@@ -1,0 +1,86 @@
+\section{Introducción}
+\label{sec:introduccion}
+
+El filtrado adaptativo ocupa un lugar distinto al del filtrado clásico
+(FIR/IIR de coeficientes fijos, abordado en trabajos previos de esta
+misma serie) porque no exige conocer de antemano las características
+estadísticas de la señal ni del sistema que se desea modelar o
+compensar. En su lugar, el filtro ajusta sus propios coeficientes de
+forma iterativa, muestra a muestra, a partir únicamente de la señal de
+entrada y de una señal de error calculada en línea. Esta propiedad lo
+hace especialmente adecuado para tres familias de problemas que
+aparecen con frecuencia en instrumentación y comunicaciones: la
+identificación ciega de sistemas desconocidos, la cancelación de ruido
+y eco cuando no se dispone de un modelo explícito del canal de ruido,
+y el seguimiento de sistemas cuyo comportamiento cambia en el tiempo.
+
+El algoritmo \textbf{LMS} (\textit{Least Mean Squares}), introducido
+por Widrow y Hoff a finales de la década de 1950, resuelve este
+problema mediante una aproximación estocástica del descenso de
+gradiente sobre el error cuadrático medio. En lugar de calcular el
+gradiente exacto de $E[e^2[n]]$ —que requeriría conocer la estadística
+conjunta de la señal, generalmente desconocida o variante—, LMS usa el
+error instantáneo $e^2[n]$ como estimador insesgado de dicho gradiente,
+obteniendo la regla de actualización:
+\begin{equation}
+w[n+1] = w[n] + \mu \, e[n] \, x[n],
+\label{eq:lms}
+\end{equation}
+donde $x[n]$ es el vector de las $N$ muestras más recientes de la
+entrada, $w[n]$ es el vector de pesos del filtro en el instante $n$,
+$d[n]$ es la señal deseada, $y[n] = w[n]^\top x[n]$ es la salida del
+filtro, y $e[n] = d[n] - y[n]$ es el error. El tamaño de paso $\mu$
+controla cuánto se desplaza $w$ en cada iteración en la dirección que
+reduce el error: un valor demasiado pequeño produce una convergencia
+lenta pero segura, mientras que un valor demasiado grande acelera la
+convergencia a costa de introducir oscilaciones crecientes que pueden
+llevar el filtro a la inestabilidad numérica. Esta disyuntiva —el
+llamado compromiso velocidad/estabilidad— es intrínseca a LMS y se
+caracteriza formalmente mediante el mayor autovalor de la matriz de
+autocorrelación de la entrada, como se detalla en la
+Sección~\ref{sec:resultados}.
+
+Una limitación práctica importante de LMS es que ese compromiso debe
+resolverse eligiendo un único valor de $\mu$ antes de ejecutar el
+filtro, bajo el supuesto implícito de que la potencia de la señal de
+entrada es razonablemente estacionaria. Cuando la señal de entrada
+cambia de potencia en el tiempo —como ocurre, por ejemplo, con la voz
+humana, con señales de audio con pasajes fuertes y silencios, o con
+canales de comunicación cuya ganancia varía—, un $\mu$ fijo deja de ser
+óptimo en todo momento: si se eligió lo bastante pequeño para ser
+estable en los segmentos de mayor potencia, resultará innecesariamente
+lento en los segmentos de menor potencia, y viceversa.
+
+El algoritmo \textbf{NLMS} (\textit{Normalized LMS}) resuelve
+exactamente esta limitación normalizando el tamaño de paso por la
+energía instantánea del vector de entrada:
+\begin{equation}
+w[n+1] = w[n] + \frac{\mu}{\varepsilon + \lVert x[n] \rVert^2} \, e[n] \, x[n],
+\label{eq:nlms}
+\end{equation}
+donde $\varepsilon > 0$ es una constante pequeña que evita la división
+por cero cuando la entrada es momentáneamente nula o muy débil. El
+efecto de esta normalización es que el paso \emph{efectivo}
+$\mu / (\varepsilon + \lVert x[n] \rVert^2)$ se autoajusta en cada
+iteración a la potencia instantánea de la señal: cuando la entrada es
+fuerte, el paso efectivo se reduce automáticamente para mantener la
+estabilidad; cuando la entrada es débil, el paso efectivo crece para
+no perder velocidad de convergencia. Esto permite usar, en la práctica,
+un único parámetro $\mu$ (típicamente en el rango $0 < \mu \leq 2$,
+con $\mu = 1$ como punto de partida habitual) que se comporta de forma
+razonablemente estable e igualmente rápida sin importar cómo varíe la
+potencia de la señal de entrada a lo largo del tiempo —una propiedad
+que LMS, con su paso fijo, no puede ofrecer.
+
+Este informe documenta dos implementaciones independientes, construidas
+enteramente desde cero (sin recurrir a una función de filtrado
+adaptativo ya empaquetada por una librería), que permiten verificar
+experimentalmente estas propiedades teóricas en vez de darlas por
+ciertas: \textbf{WORK\_ELEVEN} implementa y caracteriza LMS mediante
+tres experimentos (identificación de sistema, cancelación adaptativa de
+ruido y un barrido del tamaño de paso), y \textbf{WORK\_TWELVE}
+implementa NLMS con los mismos tres experimentos más una comparación
+directa, cabeza a cabeza, contra una reimplementación local de LMS bajo
+una señal de entrada cuya potencia cambia abruptamente a mitad de la
+prueba —el escenario exacto en el que la ventaja teórica de NLMS debería
+manifestarse de forma medible.
