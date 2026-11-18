@@ -1,0 +1,19 @@
+\section{Conclusiones}
+\label{sec:conclusiones}
+
+PARTS\_SORTING\_PLATFORM demuestra que un mismo problema de
+identificación de piezas puede resolverse con dos arquitecturas
+distintas según el entorno de despliegue disponible: una orientada a
+múltiples usuarios sobre infraestructura administrada en la nube
+(CLOUD\_MODE), y otra orientada a un único banco de pruebas físico sin
+acceso a internet (LOCAL\_MODE). La separación de responsabilidades
+entre el control físico de la banda (habilitado únicamente mediante
+huella digital autorizada), la detección automática de la pieza bajo
+la cámara, y el pipeline de clasificación y medición de diámetro,
+permite que cada componente evolucione de forma independiente. El
+modelo YOLOv8 entrenado específicamente para el banco de pruebas local
+constituye la vía principal de clasificación en LOCAL\_MODE, mientras
+que CLOUD\_MODE aún opera sobre un clasificador de referencia pendiente
+de calibración. Queda como trabajo futuro calibrar los perfiles de
+referencia en CLOUD\_MODE y ampliar el conjunto de entrenamiento del
+modelo local para las clases con menor representación.

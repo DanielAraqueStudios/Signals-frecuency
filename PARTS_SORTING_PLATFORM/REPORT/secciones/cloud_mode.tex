@@ -1,0 +1,44 @@
+\section{CLOUD\_MODE: arquitectura en la nube}
+\label{sec:cloud_mode}
+
+CLOUD\_MODE está compuesto por cuatro microservicios desplegados sobre
+Railway, más un firmware ESP32-S3 que únicamente consume resultados.
+
+\subsection{Servicio de autenticación}
+El \textit{auth-service} es dueño de las cuentas de usuario y emite
+tokens JWT firmados con RS256. Expone \texttt{POST /register},
+\texttt{POST /login}, \texttt{POST /refresh} y \texttt{GET
+/public-key}. Los tokens de acceso expiran a los 15 minutos y los de
+refresco a los 30 días. El resto de los servicios valida los tokens
+localmente contra la llave pública, sin consultar nunca la base de
+usuarios.
+
+\subsection{API Gateway}
+El \textit{api-gateway} es el único servicio con el que la aplicación
+móvil se comunica directamente. Valida el JWT, recibe la foto
+(\texttt{POST /images}, \textit{multipart}), la sube a almacenamiento
+tipo S3, invoca internamente al servicio de clasificación por HTTP,
+guarda el resultado y lo devuelve a la aplicación. También expone
+\texttt{GET /images} (historial) y \texttt{POST /devices/pair} para
+emparejar un ESP32 con un usuario, generando sus credenciales MQTT.
+
+\subsection{Servicio de clasificación}
+El \textit{classification-service} ejecuta el algoritmo de
+clasificación sobre la imagen recibida y devuelve
+\texttt{\{label, confidence, stub, reason, features\}}. Publica el
+mismo resultado en un tópico MQTT/TLS para que el ESP32 emparejado lo
+reciba. Este servicio nunca es invocado directamente por la aplicación
+móvil, sino siempre a través del API Gateway.
+
+\subsection{Broker MQTT}
+Eclipse Mosquitto, exclusivamente sobre TLS (puerto 8883), con listas
+de control de acceso por dispositivo. Los resultados se publican en
+\texttt{results/<usuario\_mqtt>}; un tópico
+\texttt{commands/<...>} queda reservado para una futura actuación
+física, aún no implementada.
+
+\subsection{Firmware ESP32-S3 (visualización)}
+Este dispositivo no toma fotos ni clasifica: se conecta por WiFi y por
+MQTT sobre TLS, se suscribe a su propio tópico de resultados y muestra
+cada clasificación entrante (opcionalmente en una pantalla OLED, o por
+puerto serial).

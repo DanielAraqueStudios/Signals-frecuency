@@ -1,0 +1,60 @@
+% ============================================================
+% Informe PARTS_SORTING_PLATFORM — arquitectura de clasificacion
+% de piezas (CLOUD_MODE, LOCAL_MODE, app movil).
+%
+% Mismo formato IEEEtran (conference) que los demas informes del
+% repositorio. Para compilar (Overleaf): pdflatex main.tex, dos pasadas.
+% ============================================================
+
+\documentclass[conference]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+
+\usepackage{cite}
+\usepackage{url}
+
+\usepackage{xcolor}
+
+\graphicspath{{figuras/}}
+
+\title{
+Plataforma de clasificación automática de piezas industriales:
+arquitectura en la nube, modo local y aplicación móvil
+}
+
+\author{
+\IEEEauthorblockN{1\textsuperscript{st} Daniel García Araque}
+\IEEEauthorblockA{
+\textit{Programa de Ingeniería Mecatrónica}\\
+\textit{Universidad Militar Nueva Granada}\\
+Bogotá, Colombia\\
+Cód. 7004185\\
+est.daniel.garciaa@unimilitar.edu.co
+}
+}
+
+\begin{document}
+
+\maketitle
+
+\input{secciones/resumen}
+\input{secciones/introduccion}
+\input{secciones/arquitectura_general}
+\input{secciones/cloud_mode}
+\input{secciones/local_mode}
+\input{secciones/app_movil}
+\input{secciones/codebase}
+\input{secciones/conclusiones}
+\input{secciones/referencias}
+
+\end{document}

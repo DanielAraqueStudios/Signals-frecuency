@@ -1,0 +1,60 @@
+\section{LOCAL\_MODE: arquitectura local}
+\label{sec:local_mode}
+
+LOCAL\_MODE está pensado para operar sobre una banda transportadora
+física, en un banco de pruebas sin acceso a internet.
+
+\subsection{Topología de red}
+El propio teléfono Android que toma las fotografías crea una red WiFi
+(hotspot); no existe un enrutador independiente. Tanto el
+microcontrolador ESP32 como la computadora que ejecuta el modelo de
+clasificación se conectan a esa red como clientes ordinarios. Al no
+existir mecanismo de reserva de IP fija como en un enrutador
+convencional, la dirección de la computadora se configura de forma
+manual (IP estática, o leyendo la concesión DHCP desde la
+configuración del hotspot). El ESP32, por restricción de hardware,
+solo opera en banda de 2.4~GHz, por lo que el hotspot debe forzarse a
+ese modo.
+
+\subsection{Control de la banda transportadora}
+El movimiento de la banda está controlado por un ESP32-WROOM-32 que
+acciona un puente H (BTS7960). El motor solo se habilita cuando un
+sensor de huella dactilar reconoce una huella previamente registrada:
+cada huella autorizada alterna el estado de la banda (encendida o
+apagada), de forma que el sistema nunca mueve la banda para un usuario
+no autorizado. El estado del sistema (banda encendida/apagada, última
+clasificación, diámetro estimado) se muestra en una pantalla LCD de
+16$\times$2 caracteres.
+
+\subsection{Detección de pieza y captura fotográfica}
+Mientras la banda está en movimiento, un sensor detecta cuándo una
+pieza se encuentra bajo la cámara y detiene momentáneamente el
+movimiento, dando tiempo a que el teléfono capture la fotografía antes
+de reanudar el recorrido. Esta pausa es gestionada enteramente por el
+sistema, de forma automática, sin intervención manual del operario.
+
+\subsection{Servidor local y clasificación}
+Un servidor FastAPI (\textit{local-server}), sin autenticación ni TLS
+por tratarse de una red cerrada, expone un pequeño conjunto de
+endpoints HTTP: recepción de la fotografía capturada, consulta del
+resultado más reciente (que es lo que el ESP32 consulta
+periódicamente, al no existir un mecanismo de notificación push en
+este modo) y verificación de estado del servicio.
+
+Sobre cada fotografía recibida se ejecutan dos procesos
+independientes:
+
+\begin{itemize}
+  \item \textbf{Clasificación}: un modelo YOLOv8 entrenado
+  específicamente sobre fotografías de las piezas del banco de pruebas
+  (brocas, escariadores, tornillos y brocas de centropunto) determina
+  la clase de la pieza y su nivel de confianza.
+  \item \textbf{Medición de diámetro}: a partir de un marcador de
+  referencia de longitud física conocida (1~cm) colocado junto a la
+  pieza en el mismo encuadre, se calcula la relación
+  píxeles-por-centímetro y, con ella, el diámetro real de la pieza
+  fotografiada.
+\end{itemize}
+
+Ambos resultados se combinan en una única respuesta, que el ESP32
+consulta y muestra en su pantalla LCD y por puerto serial.

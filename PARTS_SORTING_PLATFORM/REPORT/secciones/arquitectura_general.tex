@@ -1,0 +1,40 @@
+\section{Arquitectura general}
+\label{sec:arquitectura_general}
+
+La plataforma está organizada en tres componentes principales que se
+reutilizan parcialmente entre los dos modos de despliegue:
+
+\begin{enumerate}
+  \item \textbf{Aplicación móvil}: punto de entrada para el operario en
+  el escenario en la nube (captura de foto, autenticación, historial de
+  resultados).
+  \item \textbf{CLOUD\_MODE}: conjunto de microservicios desplegados en
+  Railway (API Gateway, servicio de autenticación, servicio de
+  clasificación, broker MQTT) orientado a múltiples usuarios.
+  \item \textbf{LOCAL\_MODE}: un servidor FastAPI de un solo proceso,
+  sin autenticación ni TLS, pensado para correr en la misma red cerrada
+  que el ESP32 y la cámara, sin salida a internet.
+\end{enumerate}
+
+Los dos modos no interoperan entre sí: un despliegue dado opera en uno
+u otro, según el entorno disponible (infraestructura administrada vs.
+banco de pruebas aislado). La Tabla \ref{tab:comparacion} resume las
+diferencias principales.
+
+\begin{table}[H]
+\centering
+\caption{Comparación entre CLOUD\_MODE y LOCAL\_MODE}
+\label{tab:comparacion}
+\begin{tabular}{@{}p{2.1cm}p{2.7cm}p{2.7cm}@{}}
+\toprule
+ & \textbf{CLOUD\_MODE} & \textbf{LOCAL\_MODE} \\
+\midrule
+Autenticación & JWT (RS256) & Ninguna \\
+Transporte & HTTPS + MQTT/TLS & HTTP plano \\
+Usuarios & Múltiples, con cuentas & Un solo operario \\
+Almacenamiento & Objeto remoto (S3) & En memoria, un proceso \\
+Alcance de red & Internet & LAN cerrada (hotspot) \\
+Hardware físico & ESP32-S3, solo muestra resultado & ESP32-WROOM-32, controla banda y huella \\
+\bottomrule
+\end{tabular}
+\end{table}

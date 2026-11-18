@@ -1,0 +1,29 @@
+\section{Introducción}
+\label{sec:introduccion}
+
+La clasificación manual de piezas pequeñas (brocas, escariadores,
+tornillos) en procesos de ferretería o manufactura es una tarea
+repetitiva propensa a error humano. PARTS\_SORTING\_PLATFORM busca
+automatizar la identificación de estas piezas a partir de una
+fotografía, dejando la decisión final y el registro en manos de un
+operario, sin incorporar actuadores de separación física de piezas.
+
+El proyecto contempla dos escenarios de uso con requisitos distintos:
+
+\begin{itemize}
+  \item Un escenario \textbf{en la nube}, donde varios operarios desde
+  distintos dispositivos móviles suben fotografías autenticadas a una
+  infraestructura administrada (Railway), reciben el resultado en la
+  aplicación y, opcionalmente, un dispositivo ESP32 emparejado muestra
+  el resultado en tiempo real.
+
+  \item Un escenario \textbf{local}, pensado para un banco de pruebas o
+  una banda transportadora física sin acceso a internet: un teléfono
+  Android crea una red WiFi propia (hotspot) a la que se conectan tanto
+  el microcontrolador ESP32 como la computadora que ejecuta el modelo
+  de clasificación.
+\end{itemize}
+
+Ambos modos comparten el mismo propósito funcional (identificar la
+pieza y, en el modo local, además estimar su diámetro) pero no
+comparten infraestructura ni protocolo de transporte entre sí.

@@ -1,0 +1,26 @@
+\section{Aplicación móvil}
+\label{sec:app_movil}
+
+La aplicación móvil está construida sobre \textbf{Expo + React Native
+(TypeScript)} y sirve como interfaz de captura y consulta para
+CLOUD\_MODE. Sus pantallas principales son:
+
+\begin{itemize}
+  \item \textbf{Inicio de sesión / registro}, contra el servicio de
+  autenticación.
+  \item \textbf{Captura}: toma una fotografía de la pieza con la
+  cámara del dispositivo y la envía para clasificación.
+  \item \textbf{Historial}: lista de resultados anteriores del
+  usuario, con actualización mediante gesto de ``deslizar para
+  refrescar''.
+\end{itemize}
+
+La aplicación se comunica con el API Gateway mediante HTTPS y un token
+JWT tipo \textit{Bearer}, almacenado de forma segura en el almacén de
+claves del sistema operativo (no en almacenamiento simple). Cuando el
+token de acceso expira, la aplicación lo renueva automáticamente contra
+el servicio de autenticación y reintenta la operación una sola vez.
+Mientras el servicio de clasificación no tenga perfiles de referencia
+calibrados, la aplicación muestra una etiqueta visible indicando que el
+resultado es una vista previa y no proviene aún de un modelo
+calibrado.

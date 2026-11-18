@@ -1,0 +1,97 @@
+\section{Organización del código fuente}
+\label{sec:codebase}
+
+El repositorio refleja directamente la separación entre los dos modos
+de despliegue descritos en las secciones anteriores:
+
+\begin{figure*}[!t]
+\centering
+\begin{verbatim}
+PARTS_SORTING_PLATFORM/
+|-- shared/            clasificador por espectro (FFT), compartido entre modos
+|-- mobile-app/        Expo + React Native + TypeScript
+|   `-- src/
+|       |-- api/
+|       |-- components/
+|       |-- context/
+|       `-- screens/
+|-- CLOUD_MODE/
+|   |-- auth-service/
+|   |-- api-gateway/
+|   |-- classification-service/
+|   |-- mqtt-broker/
+|   |-- firmware/esp32s3_result_display/
+|   `-- scripts/
+|-- LOCAL_MODE/
+|   |-- local-server/
+|   |   |-- app/         FastAPI: clasificador YOLO, medicion de diametro
+|   |   |-- training/    dataset + entrenamiento YOLOv8
+|   |   |-- static/      paginas servidas al telefono
+|   |   `-- tests/
+|   |-- firmware/esp32_local_http/
+|   |   `-- sprits/      sketches de prueba por modulo
+|   `-- scripts/
+|-- docs/
+`-- REPORT/
+\end{verbatim}
+\caption{Estructura de directorios de \texttt{PARTS\_SORTING\_PLATFORM}.}
+\label{fig:codebase_tree}
+\end{figure*}
+
+El único módulo verdaderamente compartido entre ambos modos de
+despliegue es \texttt{shared/spectrum\_classifier.py}. En
+\texttt{CLOUD\_MODE} este módulo sigue siendo el clasificador
+efectivamente usado por \textit{classification-service}; en
+\texttt{LOCAL\_MODE}, en cambio, la ruta de clasificación en vivo fue
+migrada a un modelo YOLOv8 entrenado específicamente sobre el banco de
+pruebas (Sección~\ref{sec:local_mode}), de modo que el clasificador por
+espectro quedó presente en el código pero sin uso activo en ese modo.
+
+\subsection{Pertinencia del clasificador por espectro frente a las limitaciones observadas de YOLO}
+
+Durante las pruebas del modo local se observó que el modelo YOLO,
+entrenado sobre un conjunto de datos todavía pequeño y desbalanceado
+por clase, puede ser inconsistente entre fotografías consecutivas de
+la misma pieza física: la clasificación alternó entre dos clases
+distintas y la estimación de diámetro varió apreciablemente sin que la
+pieza se moviera, pese a que el modelo reportaba una confianza muy alta
+(superior al 95\,\%) en ambos casos. Esto es un síntoma típico de
+sobreajuste con pocos datos de entrenamiento, no un error de
+implementación.
+
+En ese contexto, el clasificador por espectro conserva un valor
+práctico concreto: al ser un método completamente distinto (basado en
+bandas de energía radiales de la transformada de Fourier, sin red
+neuronal), no comparte los sesgos de un modelo entrenado con pocos
+ejemplos, y podría usarse como una segunda opinión independiente o como
+mecanismo de verificación cruzada frente a una predicción de YOLO de
+alta confianza pero potencialmente errónea. Esta combinación
+(\textit{ensemble}) no está implementada en el código actual; se deja
+planteada como mejora futura concreta, no como una capacidad ya
+existente.
+
+\subsection{Una condición de carrera real, y cómo se resolvió}
+
+Es importante distinguir lo anterior de una condición de carrera real
+que sí se encontró y corrigió en el código del modo local: al pasar de
+una señal de pausa de disparo único a una señal de pausa por nivel
+(que permanece activa hasta que se indica explícitamente reanudar), la
+página que captura la fotografía consultaba ese estado repetidamente y
+disparaba una captura nueva en cada consulta mientras la pausa seguía
+activa, generando decenas de fotografías para una sola detención de la
+banda. La corrección fue estrictamente de control de estado —una
+bandera que recuerda si ya se capturó una fotografía para la pausa
+actual— y no tiene relación alguna con el procesamiento espectral de
+la señal.
+
+\subsection{Estado de la aplicación móvil}
+
+El código de la aplicación móvil está completo: pantallas de
+autenticación, captura de fotografía y consulta de historial, cliente
+HTTP con renovación automática de token, y almacenamiento seguro de
+credenciales. Se verificó de forma estática (compilación de tipos sin
+errores y verificación de configuración del proyecto), pero, dada la
+complejidad de disponer de un emulador o dispositivo físico configurado
+en este entorno de desarrollo, no se llegó a ejecutar en vivo contra un
+backend real. El código existe y está listo para esa prueba; lo que
+falta es la verificación funcional end-to-end, no su implementación.

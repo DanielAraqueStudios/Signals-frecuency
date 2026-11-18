@@ -1,0 +1,17 @@
+\begin{abstract}
+Este informe describe la arquitectura de PARTS\_SORTING\_PLATFORM, una
+plataforma para la identificación automática de piezas de ferretería
+(brocas, escariadores, tornillos, brocas de centropunto) a partir de
+una fotografía. El sistema se implementa en dos modos de despliegue
+independientes: un modo en la nube (CLOUD\_MODE), orientado a múltiples
+usuarios autenticados sobre infraestructura administrada, y un modo
+local (LOCAL\_MODE), orientado a una banda transportadora física
+controlada por un microcontrolador ESP32 dentro de una red cerrada sin
+acceso a internet. Se describe además la aplicación móvil que sirve de
+interfaz de captura y consulta de resultados. El documento detalla el
+flujo de datos de cada modo, el controlador de huella digital que
+autoriza el movimiento de la banda, el sensor que detiene la banda al
+detectar una pieza bajo la cámara, y el modelo de clasificación
+(YOLOv8) junto con la medición de diámetro mediante un marcador de
+referencia.
+\end{abstract}
