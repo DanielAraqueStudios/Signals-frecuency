@@ -1,5 +1,7 @@
-"""No reference spectrum profiles are configured in this test environment
-(see model/labels_config.json) -- every test here exercises stub mode."""
+"""local-server uses the trained YOLO weights (app/yolo_classifier.py),
+which ARE present in this repo, so most tests here exercise real
+inference rather than stub mode -- see test_local_server.py's module
+docstring."""
 
 from __future__ import annotations
 

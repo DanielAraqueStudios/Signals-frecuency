@@ -1,8 +1,9 @@
 # local-server
 
 The "computer" in local-mode: a single FastAPI process that runs on a
-machine joined to the same predefined WiFi access point as the phone and
-the ESP32. Classifies uploaded images by frequency-spectrum extraction
+machine joined to the Android phone's own WiFi hotspot, the same hotspot
+the ESP32 also joins (see `../NETWORK_SETUP.md` for the hotspot/IP
+details). Classifies uploaded images by frequency-spectrum extraction
 (`../../shared/spectrum_classifier.py`) -- no ML model, same algorithm
 `CLOUD_MODE/classification-service` uses.
 
@@ -26,6 +27,14 @@ lab/demo network, not a shortcut to fix later.
   `../firmware/esp32_local_http/`), since it has no way to learn a
   dynamically-generated sample id without MQTT/push.
 - `GET /healthz` -- `{"status": "ok", "stub_mode": bool}`.
+- `POST /band/pause` -- stands in for the ESP32's VL53L0X distance sensor
+  while it isn't working reliably. A second device (phone, fixed IP on
+  this LAN) calls this on each volume-up/down press; no body needed.
+  Sets a one-shot "pause requested" flag (see `app/pause_trigger.py`).
+- `GET /band/pause-status` -- `{"pause_requested": bool}`. Polled by the
+  ESP32 firmware (`../firmware/esp32_local_http/`) alongside
+  `/images/latest`; reading it resets the flag, so one button press maps
+  to exactly one band pause.
 
 ## Stub mode
 
@@ -42,13 +51,19 @@ label.
 ```bash
 cd LOCAL_MODE/local-server
 pip install -r requirements.txt
+# PYTHONPATH must include PARTS_SORTING_PLATFORM/ (the repo folder two
+# levels up) -- app/main.py imports shared.spectrum_classifier, which
+# lives in PARTS_SORTING_PLATFORM/shared/, not under local-server/.
+# On Windows PowerShell:
+$env:PYTHONPATH = (Resolve-Path ../..).Path
 uvicorn app.main:app --host 0.0.0.0 --port 8100
 ```
 
 `--host 0.0.0.0` matters: the ESP32 and phone reach this over the LAN, not
-localhost. Pick (or reserve via DHCP) a static IP for this machine on the
-access point and put it in `esp32_local_http.ino`'s `EDIT_THIS_*`
-constants.
+localhost. This machine joins the phone's hotspot as a client; see
+`../NETWORK_SETUP.md` for how to get it a stable, known IP (a phone
+hotspot usually can't do DHCP reservation like a router) and put that
+address in `esp32_local_http.ino`'s `EDIT_THIS_*` constants.
 
 ```bash
 # From another machine on the same network:

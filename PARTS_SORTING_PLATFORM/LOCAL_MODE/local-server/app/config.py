@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     labels_config_path: str = "model/labels_config.json"
+    # Trained in ../training/ -- see that folder's README.md. Relative to
+    # local-server/ (where uvicorn is run from), matching labels_config_path's
+    # own convention above.
+    yolo_weights_path: str = "training/runs/real_run2/weights/best.pt"
 
 
 settings = Settings()

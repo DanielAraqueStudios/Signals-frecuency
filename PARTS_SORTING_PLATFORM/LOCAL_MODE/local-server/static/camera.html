@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Band Camera</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #111; color: #eee; font-family: sans-serif; }
+  #wrap { display: flex; flex-direction: column; min-height: 100vh; }
+  video { width: 100%; max-height: 50vh; background: #000; object-fit: contain; }
+  #controls { padding: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  input[type=text] { flex: 1; min-width: 120px; padding: 8px; font-size: 14px; }
+  input[type=number] { width: 90px; padding: 8px; font-size: 14px; }
+  button { padding: 10px 16px; font-size: 16px; }
+  #status { padding: 10px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+  .row { margin-bottom: 4px; }
+  .ok { color: #7cfc7c; }
+  .bad { color: #ff6b6b; }
+  .warn { color: #ffd166; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <video id="preview" autoplay playsinline muted></video>
+  <div id="controls">
+    <label>Server: <input type="text" id="baseUrlInput"></label>
+    <label>Poll ms: <input type="number" id="pollIntervalInput"></label>
+    <button id="takePhotoBtn">Take photo now</button>
+  </div>
+  <div id="status"></div>
+  <canvas id="captureCanvas" style="display:none"></canvas>
+</div>
+
+<script>
+// --- Easy-to-tweak defaults -------------------------------------------------
+const DEFAULT_BASE_URL = window.location.origin;
+const DEFAULT_POLL_INTERVAL_MS = 700;
+const PAUSE_STATUS_PATH = "/band/pause-status";
+const IMAGE_UPLOAD_PATH_PREFIX = "/images/";
+const JPEG_QUALITY = 0.85;
+const SAMPLE_ID_PREFIX = "phone-";
+function makeSampleId() {
+  return SAMPLE_ID_PREFIX + Date.now().toString();
+}
+const STATUS_TEXT = {
+  cameraRequesting: "Requesting camera permission...",
+  cameraGranted: "Camera: granted, preview live.",
+  cameraDenied: "Camera: DENIED or unavailable.",
+  cameraInsecureContext:
+    "Camera API unavailable: this page is served over plain HTTP, and " +
+    "browsers only allow camera access on HTTPS or localhost. Fix on Chrome: " +
+    "open chrome://flags, search 'insecure origins treated as secure', add " +
+    "this page's exact URL (" + window.location.origin + "), set it to " +
+    "Enabled, then relaunch Chrome and reload this page.",
+  pollingIdle: "Polling pause-status...",
+  pollingError: "Polling error",
+  capturing: "Capturing frame...",
+  uploading: "Uploading...",
+};
+// -----------------------------------------------------------------------
+
+const video = document.getElementById("preview");
+const canvas = document.getElementById("captureCanvas");
+const statusEl = document.getElementById("status");
+const baseUrlInput = document.getElementById("baseUrlInput");
+const pollIntervalInput = document.getElementById("pollIntervalInput");
+const takePhotoBtn = document.getElementById("takePhotoBtn");
+
+baseUrlInput.value = DEFAULT_BASE_URL;
+pollIntervalInput.value = DEFAULT_POLL_INTERVAL_MS;
+
+const state = {
+  camera: STATUS_TEXT.cameraRequesting,
+  polling: "not started",
+  lastCapture: "never",
+  lastUpload: "none yet",
+  error: "none",
+  pollCount: 0,
+};
+
+function render() {
+  statusEl.innerHTML =
+    `<div class="row">Camera: <span class="${(state.camera.includes('DENIED') || state.camera.includes('unavailable')) ? 'bad' : 'ok'}">${escapeHtml(state.camera)}</span></div>` +
+    `<div class="row">Polling: ${escapeHtml(state.polling)} (count: ${state.pollCount})</div>` +
+    `<div class="row">Last capture: ${escapeHtml(state.lastCapture)}</div>` +
+    `<div class="row">Last upload: ${escapeHtml(state.lastUpload)}</div>` +
+    `<div class="row ${state.error === 'none' ? '' : 'warn'}">Last error: ${escapeHtml(state.error)}</div>`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function getBaseUrl() {
+  return baseUrlInput.value.trim().replace(/\/+$/, "");
+}
+
+async function startCamera() {
+  // On a non-secure origin (plain http:// on a LAN IP, not localhost),
+  // navigator.mediaDevices is undefined entirely -- the browser never
+  // even shows a permission prompt, which otherwise looks identical to
+  // a user denial. Detect this specific case and say so, instead of a
+  // generic/confusing "DENIED".
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    state.camera = STATUS_TEXT.cameraInsecureContext;
+    render();
+    return;
+  }
+
+  state.camera = STATUS_TEXT.cameraRequesting;
+  render();
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" }
+    });
+    video.srcObject = stream;
+    state.camera = STATUS_TEXT.cameraGranted;
+  } catch (err) {
+    state.camera = STATUS_TEXT.cameraDenied;
+    state.error = "getUserMedia: " + err.message;
+  }
+  render();
+}
+
+function captureFrameToBlob() {
+  return new Promise((resolve, reject) => {
+    if (!video.videoWidth || !video.videoHeight) {
+      reject(new Error("video has no dimensions yet"));
+      return;
+    }
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(blob => {
+      if (blob) resolve(blob);
+      else reject(new Error("canvas.toBlob returned null"));
+    }, "image/jpeg", JPEG_QUALITY);
+  });
+}
+
+async function captureAndUpload(reason) {
+  state.lastCapture = STATUS_TEXT.capturing + " (" + reason + ")";
+  render();
+  let blob;
+  try {
+    blob = await captureFrameToBlob();
+    state.lastCapture = new Date().toLocaleTimeString() + " (" + reason + ")";
+  } catch (err) {
+    state.error = "capture failed: " + err.message;
+    render();
+    return;
+  }
+  render();
+
+  const sampleId = makeSampleId();
+  const url = getBaseUrl() + IMAGE_UPLOAD_PATH_PREFIX + encodeURIComponent(sampleId);
+  state.lastUpload = STATUS_TEXT.uploading + " -> " + sampleId;
+  render();
+  try {
+    const resp = await fetch(url, {
+      method: "PUT",
+      body: blob,
+      headers: { "Content-Type": "image/jpeg" }
+    });
+    const bodyText = await resp.text();
+    if (resp.ok) {
+      state.lastUpload = `OK (${resp.status}) id=${sampleId} @ ${new Date().toLocaleTimeString()}`;
+      state.error = "none";
+    } else {
+      state.lastUpload = `FAILED (${resp.status}) id=${sampleId}`;
+      state.error = "upload HTTP " + resp.status + ": " + bodyText.slice(0, 200);
+    }
+  } catch (err) {
+    state.lastUpload = "FAILED (network error) id=" + sampleId;
+    state.error = "upload exception: " + err.message;
+  }
+  render();
+}
+
+let pollTimer = null;
+
+// /band/pause-status reports a LEVEL (stays true until /band/resume is
+// called), not a one-shot edge -- without this flag, every single poll
+// while paused would trigger a brand new capture+upload (seen in
+// testing: ~50 photos for one pause, which can overload the GPU and
+// crash the server). We only capture on the transition into "paused",
+// then wait for pause_requested to go back to false before allowing
+// another capture.
+let alreadyCapturedThisPause = false;
+
+async function pollOnce() {
+  state.pollCount++;
+  try {
+    const resp = await fetch(getBaseUrl() + PAUSE_STATUS_PATH);
+    if (!resp.ok) {
+      state.polling = STATUS_TEXT.pollingError + ": HTTP " + resp.status;
+      render();
+      return;
+    }
+    const data = await resp.json();
+    state.polling = STATUS_TEXT.pollingIdle + " (last: pause_requested=" + data.pause_requested + ")";
+    render();
+    if (data.pause_requested === true && !alreadyCapturedThisPause) {
+      alreadyCapturedThisPause = true;
+      await captureAndUpload("auto pause-status");
+    } else if (data.pause_requested === false) {
+      alreadyCapturedThisPause = false;
+    }
+  } catch (err) {
+    state.polling = STATUS_TEXT.pollingError;
+    state.error = "poll exception: " + err.message;
+    render();
+  }
+}
+
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  const interval = parseInt(pollIntervalInput.value, 10) || DEFAULT_POLL_INTERVAL_MS;
+  state.polling = "running every " + interval + "ms";
+  render();
+  pollTimer = setInterval(pollOnce, interval);
+  pollOnce();
+}
+
+pollIntervalInput.addEventListener("change", startPolling);
+takePhotoBtn.addEventListener("click", () => captureAndUpload("manual button"));
+
+render();
+startCamera().then(startPolling);
+</script>
+</body>
+</html>

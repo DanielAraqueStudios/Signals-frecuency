@@ -1,0 +1,86 @@
+<!doctype html>
+<!--
+Zero-install pause/resume page -- opened ONCE in phone #2's browser, no
+app needed. Stands in for a physical volume-button press (browsers can't
+intercept hardware volume keys -- this is a deliberate, documented
+workaround, see ../../firmware/esp32_local_http/README.md "Setting up
+the pause-trigger phone"). PAUSE stops the band (stays stopped); RESUME
+starts it again -- a level, not a timed one-shot, so you control exactly
+when it resumes instead of waiting a fixed delay.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Band Pause / Resume</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: #111; color: #eee;
+    font-family: system-ui, sans-serif;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .bandBtn {
+    width: 80vw; height: 30vh;
+    font-size: 7vw; font-weight: bold;
+    color: white; border: none; border-radius: 16px;
+    touch-action: manipulation; margin: 3vh 0;
+  }
+  #pauseBtn { background: #c0392b; }
+  #pauseBtn:active { background: #922b21; }
+  #resumeBtn { background: #27ae60; }
+  #resumeBtn:active { background: #1e8449; }
+  #status { margin-top: 12px; font-size: 4vw; text-align: center; max-width: 90vw; }
+  #baseUrlRow { margin-bottom: 12px; font-size: 3.5vw; }
+  #baseUrlInput { font-size: 3.5vw; width: 50vw; }
+</style>
+</head>
+<body>
+  <div id="baseUrlRow">
+    local-server: <input id="baseUrlInput" type="text" />
+  </div>
+  <button id="pauseBtn" class="bandBtn">PAUSE BAND</button>
+  <button id="resumeBtn" class="bandBtn">RESUME BAND</button>
+  <div id="status">Ready.</div>
+
+<script>
+  const PAUSE_PATH = "/band/pause";
+  const RESUME_PATH = "/band/resume";
+  const DEFAULT_BASE_URL = window.location.origin;
+
+  const baseUrlInput = document.getElementById("baseUrlInput");
+  const pauseBtn = document.getElementById("pauseBtn");
+  const resumeBtn = document.getElementById("resumeBtn");
+  const statusEl = document.getElementById("status");
+
+  baseUrlInput.value = DEFAULT_BASE_URL;
+
+  function setStatus(text) {
+    statusEl.textContent = text;
+  }
+
+  async function sendCommand(path, label) {
+    const base = baseUrlInput.value.trim().replace(/\/$/, "");
+    setStatus("Sending " + label + "...");
+    pauseBtn.disabled = true;
+    resumeBtn.disabled = true;
+    try {
+      const resp = await fetch(base + path, { method: "POST" });
+      if (resp.ok) {
+        setStatus(label + " sent OK (HTTP " + resp.status + ") at " + new Date().toLocaleTimeString());
+      } else {
+        setStatus("Server responded with HTTP " + resp.status);
+      }
+    } catch (err) {
+      setStatus("Network error: " + err.message + " -- check the local-server address above.");
+    } finally {
+      pauseBtn.disabled = false;
+      resumeBtn.disabled = false;
+    }
+  }
+
+  pauseBtn.addEventListener("click", () => sendCommand(PAUSE_PATH, "PAUSE"));
+  resumeBtn.addEventListener("click", () => sendCommand(RESUME_PATH, "RESUME"));
+</script>
+</body>
+</html>
