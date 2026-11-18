@@ -12,9 +12,8 @@ signal format supplied for this exercise:
 - After that: data, 2 nibbles (symbols) per character, high nibble first.
 - Terminated by a `0x00` byte.
 
-None of these parameters (carrier, level count, symbol duration, ramp,
-terminator) were guessed or inferred — they were given directly for this
-exercise. The sample rate, however, **is** recovered from each file's own
+
+The sample rate, however, **is** recovered from each file's own
 timestamps (not assumed), since it differs between files.
 
 ---
