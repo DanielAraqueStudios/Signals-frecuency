@@ -1,0 +1,144 @@
+% ============================================================
+% IV. RESULTADOS
+% ============================================================
+
+\section{Resultados}
+\label{sec:resultados}
+
+\textbf{Este informe es una plantilla ilustrativa}: no se dispuso de robot Minisumo ensamblado, osciloscopio, generador de señales, IMU ni encoders en el entorno de preparación de este documento. Todos los valores numéricos de esta sección son \textbf{ilustrativos} (típicos de un montaje de este tipo, con ruido de medición razonable), incluidos para mostrar la estructura y el formato que debería tener el informe final; deben reemplazarse ejecutando los filtros diseñados sobre los CSV reales generados por el sistema de captura, una vez el hardware esté disponible.
+
+\subsection{Filtrado de señales periódicas — ganancia}
+
+\begin{table}[!t]
+\centering
+\caption{Ganancia antes/después del filtro pasa-bajos IIR (100 Hz, en línea vs. simulación)}
+\label{tab:ganancia}
+\small
+\begin{tabular}{@{}r r r r r@{}}
+\toprule
+$f$ (Hz) & \multicolumn{2}{c}{En línea} & \multicolumn{2}{c}{Simulación} \\
+ & $A_{\text{in}}$ (V) & $A_{\text{out}}$ (V) & $A_{\text{in}}$ (V) & $A_{\text{out}}$ (V) \\
+\midrule
+50  & 2.00 & 1.96 & 2.00 & 1.97 \\
+80  & 2.00 & 1.78 & 2.00 & 1.80 \\
+100 & 2.00 & 1.41 & 2.00 & 1.42 \\
+120 & 2.00 & 0.62 & 2.00 & 0.60 \\
+150 & 2.00 & 0.08 & 2.00 & 0.07 \\
+200 & 2.00 & 0.02 & 2.00 & 0.02 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La Tabla~\ref{tab:ganancia} muestra el comportamiento esperado de un pasa-bajos con $f_c = 100$ Hz y transición de $30$ Hz: atenuación despreciable muy por debajo de $f_c$ ($50$ Hz), caída pronunciada alrededor de $f_c$ ($100$--$120$ Hz) y atenuación cercana al límite de banda rechazada especificado ($< -50$ dB, es decir $< 0.3\,\%$ de la entrada) a partir de $150$ Hz; los valores en línea y en simulación coinciden dentro del margen de ruido de medición esperado.
+
+\textbf{¿Qué diferencias de desempeño encuentra entre los filtros FIR e IIR?} Para especificaciones de atenuación y transición equivalentes, el IIR (Butterworth, orden $4$) alcanza la atenuación requerida con un orden mucho menor que el FIR equivalente (orden $\sim 35$--$45$ para una transición de $30$ Hz con ventana de Hamming), a costa de una fase no lineal; el FIR, en cambio, mantiene retardo de grupo constante en toda la banda de paso.
+
+\textbf{¿Cuál tipo de filtro se ajustó mejor a los requerimientos?} Ambos cumplen la especificación de ganancia; el IIR la cumple con menor orden y por tanto menor latencia de cómputo por muestra, mientras que el FIR la cumple con fase exactamente lineal, relevante si se requiere preservar la forma de onda de componentes no sinusoidales.
+
+\textbf{Requerimientos computacionales.} El FIR (orden $\sim 40$) requiere del orden de $40$ multiplicaciones-acumulaciones (MAC) por muestra y $40$ posiciones de memoria para el historial de entrada; el IIR (orden $4$) requiere $\sim 9$ MAC por muestra y $8$ posiciones de memoria (entrada y salida pasadas). El \textbf{FIR tiene mayor costo computacional y de memoria} para especificaciones de transición estrecha equivalentes, consistente con la teoría de la Sección de Fundamento.
+
+\textbf{Aplicabilidad en ingeniería mecatrónica.} El IIR es preferible cuando los recursos del microcontrolador son limitados y la no linealidad de fase es tolerable (p. ej. filtrado de sensores de magnitudes lentas, como en esta práctica); el FIR es preferible cuando se requiere fase lineal estricta (p. ej. preprocesamiento antes de un controlador sensible a retardo variable con la frecuencia).
+
+\subsection{Filtrado de señales periódicas — fase}
+
+\begin{table}[!t]
+\centering
+\caption{Desfase señal reconstruida vs. generador, por filtro y método de reconstrucción}
+\label{tab:desfase}
+\small
+\begin{tabular}{@{}r r r r r r r r r@{}}
+\toprule
+& \multicolumn{4}{c}{Filtro FIR} & \multicolumn{4}{c}{Filtro IIR} \\
+& \multicolumn{2}{c}{PWM} & \multicolumn{2}{c}{DAC} & \multicolumn{2}{c}{PWM} & \multicolumn{2}{c}{DAC} \\
+$f$ (Hz) & ms & ang & ms & ang & ms & ang & ms & ang \\
+\midrule
+50  & 6.2 & 111.6° & 3.1 & 55.8°  & 4.0 & 72.0°  & 2.1 & 37.8° \\
+80  & 5.8 & 167.0° & 2.9 & 83.5°  & 5.1 & 146.9° & 2.9 & 83.5° \\
+100 & 5.6 & 201.6° & 2.8 & 100.8° & 6.3 & 226.8° & 3.6 & 129.6° \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{¿Se obtiene el resultado esperado según el tipo de filtro y método de reconstrucción?} Sí, en tendencia: el desfase del método PWM es consistentemente mayor que el del DAC para el mismo filtro (por el retardo de grupo adicional del filtro analógico externo del método PWM — Sección de Fundamento), y el desfase del FIR se mantiene aproximadamente proporcional a la frecuencia (fase lineal: pendiente de ms constante respecto al periodo), mientras que el desfase del IIR crece de forma no proporcional —más marcado al acercarse a $f_c = 100$ Hz, donde la fase de un Butterworth varía más rápidamente—, consistente con su fase no lineal.
+
+\subsection{Filtrado de señales de sensores}
+
+\begin{table}[!t]
+\centering
+\caption{Señal y ruido antes de filtrar}
+\label{tab:sensores-antes}
+\small
+\begin{tabular}{@{}l r r r r r@{}}
+\toprule
+Sensor & BW total & \multicolumn{2}{c}{Señal} & \multicolumn{2}{c}{Ruido} \\
+ & (Hz) & Banda (Hz) & Amp. & Banda (Hz) & Amp. \\
+\midrule
+IMU accel. (m/s$^2$) & 0--100 & 0--3 & 1.20 & 10--100 & 0.08 \\
+IMU gyro (rad/s)     & 0--100 & 0--3 & 0.90 & 10--100 & 0.05 \\
+Encoder (rad/s)      & 0--100 & 0--4 & 25.0 & 15--100 & 1.20 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\centering
+\caption{Señal y ruido después de filtrar — IIR convencional ($f_c=5$ Hz)}
+\label{tab:sensores-iir}
+\small
+\begin{tabular}{@{}l r r r r r@{}}
+\toprule
+Sensor & BW total & \multicolumn{2}{c}{Señal} & \multicolumn{2}{c}{Ruido} \\
+ & (Hz) & Banda (Hz) & Amp. & Banda (Hz) & Amp. \\
+\midrule
+IMU accel. (m/s$^2$) & 0--5 & 0--3 & 1.18 & -- & 0.01 \\
+IMU gyro (rad/s)     & 0--5 & 0--3 & 0.89 & -- & 0.01 \\
+Encoder (rad/s)      & 0--5 & 0--4 & 24.6 & -- & 0.15 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\centering
+\caption{Señal y ruido después de filtrar — media móvil ($L=10$ muestras)}
+\label{tab:sensores-ma}
+\small
+\begin{tabular}{@{}l r r r r r@{}}
+\toprule
+Sensor & BW total & \multicolumn{2}{c}{Señal} & \multicolumn{2}{c}{Ruido} \\
+ & (Hz) & Banda (Hz) & Amp. & Banda (Hz) & Amp. \\
+\midrule
+IMU accel. (m/s$^2$) & 0--7 & 0--3 & 1.15 & -- & 0.02 \\
+IMU gyro (rad/s)     & 0--7 & 0--3 & 0.87 & -- & 0.02 \\
+Encoder (rad/s)      & 0--7 & 0--4 & 24.1 & -- & 0.25 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{¿En qué banda se observan los mayores cambios al aplicar los métodos de filtrado?} Los mayores cambios se observan en la banda de $10$--$100$ Hz (IMU) y $15$--$100$ Hz (encoder) de la Tabla~\ref{tab:sensores-antes}, que es precisamente donde se concentraba el ruido de banda ancha; dicha banda queda prácticamente eliminada (amplitud residual $< 0.02$ en IMU, Tablas~\ref{tab:sensores-iir}--\ref{tab:sensores-ma}) sin afectar significativamente la amplitud de la señal de interés en $0$--$4$ Hz, que se conserva dentro de un $2$--$4\,\%$ de su valor original.
+
+\textbf{¿Cuál técnica tiene mejor resultado?} El IIR convencional logra la mayor atenuación de ruido con la menor afectación de la amplitud de señal (Tabla~\ref{tab:sensores-iir}), a costa de mayor costo de diseño inicial (selección de orden y $f_c$); la media móvil es casi igual de efectiva con un diseño trivial, pero introduce un ancho de banda efectivo ligeramente mayor (menor atenuación de la cola de ruido cercana a su banda de paso, Tabla~\ref{tab:sensores-ma}).
+
+\textbf{Tiempo de cómputo y memoria.} La media móvil es la más eficiente en tiempo de cómputo (una suma y una resta por muestra, con un acumulador) y en memoria (un buffer circular de tamaño $L$); el IIR requiere un número fijo pequeño de MAC por muestra (orden bajo) pero más que la media móvil; el filtro autorregresivo/adaptativo es el más costoso, por requerir actualización de coeficientes en cada muestra.
+
+\textbf{Mejor equilibrio desempeño/costo.} Para esta aplicación (señales de dinámica lenta del robot frente a ruido de banda ancha bien separado en frecuencia), el \textbf{IIR convencional de orden bajo} ofrece el mejor equilibrio: atenuación de ruido comparable a estrategias más costosas, con el menor costo computacional entre las opciones no triviales.
+
+\subsection{Robot Minisumo — odometría}
+
+\begin{table}[!t]
+\centering
+\caption{Posición final: deseada, real y estimada por odometría}
+\label{tab:posicion}
+\small
+\begin{tabular}{@{}l r r r r r r@{}}
+\toprule
+Iter. & \multicolumn{2}{c}{Deseada (cm)} & \multicolumn{2}{c}{Real (cm)} & \multicolumn{2}{c}{Estimada (cm)} \\
+ & $x$ & $y$ & $x$ & $y$ & $x$ & $y$ \\
+\midrule
+1 & 30.0 & 0.0  & 29.2 & 0.6  & 29.8 & 0.3 \\
+2 & 0.0  & 30.0 & 0.9  & 28.7 & 0.4  & 29.5 \\
+3 & 20.0 & 20.0 & 18.9 & 19.3 & 19.6 & 19.9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El error de la posición \emph{real} respecto a la deseada (Tabla~\ref{tab:posicion}) se atribuye principalmente a deslizamiento de ruedas sobre la superficie del dojo y a la tolerancia mecánica del chasis; el error de la posición \emph{estimada} (odometría) respecto a la real es consistentemente menor que el error de la posición real respecto a la deseada, ya que la odometría se calcula directamente de la velocidad de las ruedas e incorpora en parte ese mismo deslizamiento, pero añade su propio error de calibración de radio de rueda $r$ y distancia entre ruedas $L$, además del error acumulado de integración en el tiempo ($\Delta t$) — de ahí que el error de odometría crezca con la distancia recorrida de cada trayectoria, más visible en la Iteración 2 (trayectoria más larga en $y$) que en la Iteración 1.

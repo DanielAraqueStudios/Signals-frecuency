@@ -1,0 +1,23 @@
+% ============================================================
+% V. DISCUSIÓN
+% ============================================================
+
+\section{Discusión}
+
+Esta sección profundiza en las preguntas de reflexión de la guía de práctica a partir del comportamiento teórico esperado del sistema, complementando las respuestas puntuales ya dadas junto a cada tabla en la Sección de Resultados.
+
+\subsection{Filtros convencionales: FIR vs. IIR}
+
+La diferencia de orden entre FIR e IIR para especificaciones equivalentes (Tabla~\ref{tab:specs-filtros}) no es un detalle de implementación menor: en un microcontrolador de recursos limitados, un FIR de orden 40 ejecutado a $500$ muestras/s requiere completar $40$ MAC en menos de $2$ ms por muestra, mientras que un IIR de orden $4$ libera ese mismo presupuesto de tiempo casi en un factor de $4$--$5\times$, margen que puede reinvertirse en otras tareas del lazo de control (p. ej. el PID de velocidad del robot). La contrapartida —fase no lineal del IIR— es irrelevante para una señal sinusoidal pura (solo desplaza su fase, no su forma), pero sí sería relevante si se filtrara una señal con múltiples componentes de frecuencia relevantes simultáneamente, donde cada componente se retardaría de forma distinta y la forma de onda resultante se distorsionaría.
+
+\subsection{Filtrado de sensores: convencional vs. adaptativo/estadístico}
+
+La elección entre un filtro convencional de coeficientes fijos y uno adaptativo depende fundamentalmente de si el espectro del ruido es estacionario. Para los sensores de este robot, el ruido de banda ancha (vibración mecánica, ruido electrónico) es razonablemente estacionario entre iteraciones de una misma rutina, lo que favorece a un filtro convencional bien diseñado una sola vez (Tabla~\ref{tab:sensores-iir}) frente al costo adicional de un filtro adaptativo que reconverge continuamente sin ganancia adicional relevante en este caso. Un filtro adaptativo sería preferible si el robot operase en condiciones de vibración muy variables (distintas superficies del dojo, distintas velocidades de motor con distinto espectro de vibración), escenario no explorado directamente en esta práctica pero mencionado como trabajo futuro en la Sección de Conclusiones.
+
+\subsection{Impacto del filtrado en la odometría del robot}
+
+El filtrado de la velocidad de encoder antes de integrarla (Sección~\ref{sec:odometria} del Fundamento) es crítico: una velocidad con ruido de cuantización de alta frecuencia sin filtrar, al integrarse en el tiempo, no necesariamente se cancela en promedio dentro de una trayectoria corta, introduciendo un sesgo adicional en la posición estimada más allá del error de calibración geométrica ($r$, $L$). La mejora relativa del error de odometría al usar velocidades filtradas (frente a sin filtrar, no mostrado explícitamente en la Tabla~\ref{tab:posicion} pero consistente con la atenuación de ruido de la Tabla~\ref{tab:sensores-iir}) debería ser más notoria en trayectorias largas o de mayor duración, donde el error de integración tiene más tiempo para acumularse.
+
+\subsection{Limitaciones del enfoque de odometría pura}
+
+Independientemente de la calidad del filtrado aplicado, la odometría basada únicamente en encoders es fundamentalmente de lazo abierto respecto a la posición real: no existe retroalimentación que corrija el error acumulado una vez ocurre deslizamiento de ruedas, a diferencia de un sistema con referencia externa (p. ej. visión, balizas, SLAM). Esto explica por qué, incluso con un filtrado de sensores óptimo, el error de la Tabla~\ref{tab:posicion} no se elimina por completo y crece de forma aproximadamente monótona con la distancia recorrida de cada trayectoria —una limitación inherente al método, no al filtrado en sí.

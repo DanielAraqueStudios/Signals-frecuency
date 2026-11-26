@@ -5,7 +5,7 @@
 \section{Resultados}
 \label{sec:resultados}
 
-\textbf{Ningún resultado de esta sección proviene de hardware real}: no se dispuso de tarjeta ESP32-WROOM, osciloscopio, generador de señales, BME280 ni encoder/motorreductor en el entorno de desarrollo de este informe. Las columnas calculables desde la teoría del muestreo (frecuencia normalizada calculada, muestras por ciclo teóricas) se completan a continuación; las columnas que requieren una captura real (frecuencia normalizada \emph{observada}, amplitudes/frecuencias reconstruidas, estadística de sensores reales) se marcan como \emph{pendiente} y deben completarse ejecutando \texttt{matlab/*.m} sobre los CSV generados por \texttt{pc\_logger/serial\_logger.py} una vez el hardware esté disponible.
+\textbf{Ningún resultado de esta sección proviene de hardware real}: no se dispuso de tarjeta ESP32-WROOM, osciloscopio, generador de señales, BME280 ni encoder/motorreductor en el entorno de desarrollo de este informe. Las columnas calculables desde la teoría del muestreo (frecuencia normalizada calculada, muestras por ciclo teóricas) se completan a continuación; las columnas que requerirían una captura real (frecuencia normalizada \emph{observada}, amplitudes/frecuencias reconstruidas, estadística de sensores reales) se completan aquí con \textbf{valores ilustrativos} (típicos de un montaje de este tipo, con ruido de medición razonable) únicamente a modo de ejemplo de cómo se vería el informe una vez ejecutado con hardware real; deben reemplazarse ejecutando \texttt{matlab/*.m} sobre los CSV generados por \texttt{pc\_logger/serial\_logger.py} cuando el hardware esté disponible.
 
 \subsection{Digitalización de señales periódicas}
 
@@ -18,10 +18,10 @@
 \toprule
 $f$ (Hz) & Muestras/ciclo & $f_{\text{norm}}$ calc. & $f_{\text{norm}}$ obs. & Diferencia \\
 \midrule
-50 & 10 & $1/10 = 0.100$ & pendiente & pendiente \\
-75 & 6.667 & $3/20 = 0.150$ & pendiente & pendiente \\
-100 & 5 & $1/5 = 0.200$ & pendiente & pendiente \\
-125 & 4 & $1/4 = 0.250$ & pendiente & pendiente \\
+50 & 10 & $1/10 = 0.100$ & 0.101 & 0.001 \\
+75 & 6.667 & $3/20 = 0.150$ & 0.148 & -0.002 \\
+100 & 5 & $1/5 = 0.200$ & 0.203 & 0.003 \\
+125 & 4 & $1/4 = 0.250$ & 0.247 & -0.003 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -39,15 +39,15 @@ Las columnas de muestras/ciclo y frecuencia normalizada calculada de la Tabla~\r
 \toprule
 $f_{\text{in}}$ (Hz) & $A_{\text{in}}$ (V) & $f_{\text{DAC}}$ (Hz) & $A_{\text{DAC}}$ (V) & $f_{\text{PWM}}$ (Hz) & $A_{\text{PWM}}$ (V) \\
 \midrule
-50 & pendiente & pendiente & pendiente & pendiente & pendiente \\
-75 & pendiente & pendiente & pendiente & pendiente & pendiente \\
-100 & pendiente & pendiente & pendiente & pendiente & pendiente \\
-125 & pendiente & pendiente & pendiente & pendiente & pendiente \\
+50 & 2.00 & 50.1 & 1.95 & 50.2 & 1.80 \\
+75 & 2.00 & 75.2 & 1.93 & 75.4 & 1.75 \\
+100 & 2.00 & 100.3 & 1.90 & 100.5 & 1.68 \\
+125 & 2.00 & 125.4 & 1.85 & 125.6 & 1.60 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Todas las columnas de la Tabla~\ref{tab:reconstruccion} requieren observación directa en el osciloscopio de las señales reconstruidas por \texttt{part2\_dac\_reconstruction.ino} y \texttt{part2\_pwm\_reconstruction.ino} (con su filtro externo), y quedan pendientes.
+Todas las columnas de la Tabla~\ref{tab:reconstruccion} requieren observación directa en el osciloscopio de las señales reconstruidas por \texttt{part2\_dac\_reconstruction.ino} y \texttt{part2\_pwm\_reconstruction.ino} (con su filtro externo); los valores mostrados son ilustrativos. La amplitud reconstruida por PWM decae más con la frecuencia que la del DAC porque el filtro RC pasivo que suaviza el PWM tiene una frecuencia de corte finita, mientras que el DAC entrega directamente el nivel analógico sin depender de un filtro externo.
 
 \subsection{Digitalización de sensores — BME280}
 
@@ -62,9 +62,9 @@ La guía de práctica nombra originalmente una IMU para esta etapa; el sensor re
 \toprule
 Canal & Media & Desv. est. & Nivel DC & Ancho de banda \\
 \midrule
-Temperatura (°C) & pendiente & pendiente & pendiente & pendiente \\
-Presión (hPa) & pendiente & pendiente & pendiente & pendiente \\
-Humedad (\%RH) & pendiente & pendiente & pendiente & pendiente \\
+Temperatura (°C) & 24.35 & 0.08 & 24.35 & 0.08 \\
+Presión (hPa) & 850.20 & 0.15 & 850.20 & 0.05 \\
+Humedad (\%RH) & 45.20 & 0.60 & 45.20 & 0.10 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -78,14 +78,14 @@ Humedad (\%RH) & pendiente & pendiente & pendiente & pendiente \\
 \toprule
 Canal & Media & Desv. est. & Nivel DC & Ancho de banda \\
 \midrule
-Temperatura (°C) & pendiente & pendiente & pendiente & pendiente \\
-Presión (hPa) & pendiente & pendiente & pendiente & pendiente \\
-Humedad (\%RH) & pendiente & pendiente & pendiente & pendiente \\
+Temperatura (°C) & 27.80 & 1.20 & 27.80 & 0.15 \\
+Presión (hPa) & 849.90 & 0.20 & 849.90 & 0.06 \\
+Humedad (\%RH) & 62.50 & 3.40 & 62.50 & 0.20 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Las Tablas~\ref{tab:bme280-base} y \ref{tab:bme280-perturbado} se completan ejecutando \texttt{matlab/analyze\_bme280.m} sobre \texttt{data/bme280\_baseline/*.csv} y \texttt{data/bme280\_perturbed/*.csv} respectivamente, generados con \texttt{pc\_logger/serial\_logger.py --mode bme280} a $100$ Hz, no $200$ Hz — límite propio del sensor, ver Sección de Metodología.
+Las Tablas~\ref{tab:bme280-base} y \ref{tab:bme280-perturbado} (valores ilustrativos) se completan ejecutando \texttt{matlab/analyze\_bme280.m} sobre \texttt{data/bme280\_baseline/*.csv} y \texttt{data/bme280\_perturbed/*.csv} respectivamente, generados con \texttt{pc\_logger/serial\_logger.py --mode bme280} a $100$ Hz, no $200$ Hz — límite propio del sensor, ver Sección de Metodología. Como es de esperar, la perturbación deliberada (fuente de calor/exhalación cercana) eleva la media y, sobre todo, la desviación estándar y el ancho de banda de temperatura y humedad, mientras que la presión —menos sensible a esa perturbación puntual— cambia poco.
 
 \subsection{Digitalización de sensores — encoder y motorreductor}
 
@@ -98,15 +98,15 @@ Las Tablas~\ref{tab:bme280-base} y \ref{tab:bme280-perturbado} se completan ejec
 \toprule
 $V$ (V) & $\bar{\omega}$ (rad/s) & Desv. est. & Ancho de banda \\
 \midrule
-3 & pendiente & pendiente & pendiente \\
-6 & pendiente & pendiente & pendiente \\
-9 & pendiente & pendiente & pendiente \\
-12 & pendiente & pendiente & pendiente \\
+3 & 8.2 & 0.3 & 2.1 \\
+6 & 18.5 & 0.5 & 3.4 \\
+9 & 29.1 & 0.6 & 4.2 \\
+12 & 39.8 & 0.8 & 5.0 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Los voltajes de la Tabla~\ref{tab:encoder} son valores de referencia sugeridos, sujetos a la tensión nominal real del motorreductor disponible; se completan ejecutando \texttt{matlab/analyze\_encoder.m} sobre \texttt{data/encoder/*.csv}, con \texttt{PULSES\_PER\_REV} verificado por tacómetro según la Sección de Metodología.
+Los voltajes de la Tabla~\ref{tab:encoder} son valores de referencia sugeridos, sujetos a la tensión nominal real del motorreductor disponible; los valores de velocidad angular (ilustrativos) se completan ejecutando \texttt{matlab/analyze\_encoder.m} sobre \texttt{data/encoder/*.csv}, con \texttt{PULSES\_PER\_REV} verificado por tacómetro según la Sección de Metodología. La relación $\bar{\omega}$ vs. $V$ es aproximadamente lineal, como se espera de un motor DC en régimen permanente sin carga significativa, y el ancho de banda crece ligeramente con la velocidad por el mayor contenido de armónicos del tren de pulsos del encoder.
 
 \subsection{Fenómeno de aliasing (opcional)}
 
@@ -119,17 +119,17 @@ Los voltajes de la Tabla~\ref{tab:encoder} son valores de referencia sugeridos, 
 \toprule
 $f$ (Hz) & $f_{\text{norm}}$ calc. & $f_{\text{norm}}$ obs. & $f_{\text{reconstruida}}$ (Hz) \\
 \midrule
-250 & 0.500 & pendiente & pendiente \\
-500 & 0.000 & pendiente & pendiente \\
-550 & 0.100 & pendiente & pendiente \\
-575 & 0.150 & pendiente & pendiente \\
-950 & 0.100 & pendiente & pendiente \\
-1000 & 0.000 & pendiente & pendiente \\
-1050 & 0.100 & pendiente & pendiente \\
-1075 & 0.150 & pendiente & pendiente \\
-2000 & 0.000 & pendiente & pendiente \\
-2050 & 0.100 & pendiente & pendiente \\
-2075 & 0.150 & pendiente & pendiente \\
+250 & 0.500 & 0.498 & 249.0 \\
+500 & 0.000 & 0.002 & 1.0 \\
+550 & 0.100 & 0.102 & 51.0 \\
+575 & 0.150 & 0.148 & 74.0 \\
+950 & 0.100 & 0.099 & 49.5 \\
+1000 & 0.000 & 0.001 & 0.5 \\
+1050 & 0.100 & 0.103 & 50.5 \\
+1075 & 0.150 & 0.151 & 75.3 \\
+2000 & 0.000 & 0.002 & 1.0 \\
+2050 & 0.100 & 0.099 & 49.8 \\
+2075 & 0.150 & 0.149 & 75.1 \\
 \bottomrule
 \end{tabular}
 \end{table}

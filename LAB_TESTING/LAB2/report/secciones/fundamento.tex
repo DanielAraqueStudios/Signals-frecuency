@@ -1,0 +1,48 @@
+% ============================================================
+% II. FUNDAMENTO TEÓRICO
+% ============================================================
+
+\section{Fundamento teórico}
+
+\subsection{Filtros FIR e IIR}
+
+Un filtro digital de Respuesta al Impulso Finita (FIR) de orden $N$ calcula cada salida como una combinación lineal de las $N+1$ muestras de entrada más recientes \cite{oppenheim}:
+
+\begin{equation}
+y[n] = \sum_{k=0}^{N} b_k \, x[n-k]
+\end{equation}
+
+y puede diseñarse con \textbf{fase exactamente lineal} cuando sus coeficientes $b_k$ son simétricos, propiedad que garantiza un retardo de grupo constante (independiente de la frecuencia) dentro de toda la banda de paso, a costa de requerir órdenes relativamente altos para lograr transiciones abruptas entre banda de paso y banda rechazada.
+
+Un filtro de Respuesta al Impulso Infinita (IIR) añade realimentación de salidas pasadas:
+
+\begin{equation}
+y[n] = \sum_{k=0}^{M} b_k \, x[n-k] - \sum_{k=1}^{N} a_k \, y[n-k]
+\end{equation}
+
+logrando especificaciones de magnitud equivalentes con un orden mucho menor que un FIR comparable (menor costo computacional y menor uso de memoria por muestra), pero con \textbf{fase generalmente no lineal}, lo que introduce un retardo de grupo dependiente de la frecuencia y puede distorsionar la forma de onda de señales de banda ancha, aunque sea imperceptible para una señal sinusoidal pura.
+
+\subsection{Especificaciones de diseño}
+
+Un filtro se especifica mediante su frecuencia de corte $f_c$ (el límite nominal entre banda de paso y banda rechazada), la ganancia mínima de atenuación requerida en la banda rechazada (en dB, p. ej. $< -50$ dB) y el ancho de la banda de transición entre ambas regiones; cuanto más estrecha la transición exigida para una atenuación dada, mayor el orden requerido, tanto en FIR como en IIR, aunque el crecimiento de orden con transiciones estrechas es considerablemente más pronunciado en FIR.
+
+\subsection{Filtrado adaptativo y estadístico}
+
+Frente a un filtro convencional de coeficientes fijos, un \textbf{filtro de media móvil} (\emph{moving average}) de ventana $L$ sustituye cada muestra por el promedio de sus $L$ vecinas más recientes, actuando como un filtro FIR pasa-bajos de diseño trivial, adecuado quando la dinámica de la señal de interés es mucho más lenta que el ruido superpuesto. Un \textbf{modelo autorregresivo} (AR) predice cada muestra a partir de un número finito de muestras pasadas de la propia señal, permitiendo separar la componente predecible (la señal de interés, si su dinámica es suficientemente suave) del residuo de predicción (aproximadamente el ruido). Un \textbf{filtro adaptativo} (p. ej. LMS) ajusta sus coeficientes en tiempo real minimizando un error de predicción, sin requerir conocer de antemano la frecuencia de corte óptima, a costa de una complejidad computacional mayor y de un comportamiento transitorio de convergencia que debe caracterizarse experimentalmente.
+
+\subsection{Desfase introducido por muestreo, filtrado y reconstrucción}
+
+Como se estableció en \texttt{LAB1}, toda cadena de digitalización–reconstrucción introduce un desfase propio del retenedor de orden cero (en promedio, medio periodo de muestreo) y, en el caso de reconstrucción PWM, el retardo de grupo adicional del filtro analógico externo. A esto se suma ahora el retardo de grupo propio del filtro digital insertado entre la captura y la reconstrucción: constante con la frecuencia para un FIR de fase lineal, y generalmente variable con la frecuencia para un IIR. El desfase total medido en el osciloscopio entre la señal del generador y la señal reconstruida es la suma de estas tres contribuciones (muestreo/reconstrucción, filtro digital, y filtro analógico externo si aplica), y su conversión de milisegundos a grados/radianes respecto al periodo de la señal analizada —$\theta = 360° \cdot \Delta t / T$— permite comparar desfases entre señales de distinta frecuencia en una base común.
+
+\subsection{Odometría de un robot diferencial}
+\label{sec:odometria}
+
+Un robot móvil diferencial estima su propia posición $(x, y, \theta)$ integrando la velocidad lineal y angular derivadas de la velocidad de giro de cada rueda, medida mediante sus encoders \cite{siegwart}:
+
+\begin{align}
+v &= \frac{r(\omega_R + \omega_L)}{2}, \qquad \omega = \frac{r(\omega_R - \omega_L)}{L} \\
+x_{k+1} &= x_k + v\cos(\theta_k)\,\Delta t, \quad y_{k+1} = y_k + v\sin(\theta_k)\,\Delta t \\
+\theta_{k+1} &= \theta_k + \omega\,\Delta t
+\end{align}
+
+donde $r$ es el radio de rueda, $L$ la distancia entre ruedas, y $\omega_R, \omega_L$ las velocidades angulares de las ruedas derecha e izquierda. Este método (odometría) acumula error de forma monótona con la distancia recorrida —por deslizamiento de ruedas, cuantización del encoder y errores de calibración de $r$ y $L$—, por lo que su precisión debe contrastarse experimentalmente contra la posición final real medida físicamente, como se hace en la Sección de Resultados.

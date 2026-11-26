@@ -1,0 +1,38 @@
+% ============================================================
+% III. METODOLOGÍA
+% ============================================================
+
+\section{Metodología}
+
+\subsection{Diferencias respecto a la guía de práctica}
+
+La guía nombra una tarjeta STM32 para el robot Minisumo y un sensor inercial (IMU) junto con un encoder como sensórica del robot; este proyecto continúa usando ESP32 (ver \texttt{LAB1}) por ser la tarjeta realmente disponible en ambos laboratorios, y sí incorpora una IMU real (a diferencia de \texttt{LAB1}, donde el sensor disponible era un BME280 sin canales inerciales). La frecuencia de muestreo de los sensores se mantiene en $200$ muestras/s por canal, según lo indicado en la guía.
+
+\subsection{Filtrado de señales periódicas}
+
+Se generan señales sinusoidales de referencia entre $50$ y $200$ Hz con el generador de ondas, digitalizadas a $500$ muestras/s (ver \texttt{LAB1}) y almacenadas en CSV. Se diseñan en MATLAB (\texttt{fir1}/\texttt{firpm} para FIR, \texttt{butter} para IIR) dos filtros con las especificaciones de la Tabla~\ref{tab:specs-filtros}:
+
+\begin{table}[!t]
+\centering
+\caption{Especificaciones de diseño de los filtros convencionales}
+\label{tab:specs-filtros}
+\small
+\begin{tabular}{@{}l r r r@{}}
+\toprule
+Tipo & $f_c$ & Ganancia banda rechazada & Ancho banda transición \\
+\midrule
+Pasa-bajos & 100 Hz & $< -50$ dB & 30 Hz \\
+Pasa-banda & 80--120 Hz & $< -40$ dB & 20 Hz \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Cada combinación (FIR/IIR) $\times$ (pasa-bajos/pasa-banda) se verifica primero en simulación sobre los CSV capturados, y luego se implementa en el microcontrolador para filtrado en línea; el resultado del filtrado se observa en el osciloscopio mediante reconstrucción por DAC y por PWM + filtro externo (ver \texttt{LAB1}), permitiendo comparar las cuatro combinaciones de desfase de la Tabla~\ref{tab:desfase}.
+
+\subsection{Filtrado de señales de sensores}
+
+Se capturan los seis canales de la IMU (aceleración y velocidad angular en los tres ejes) y la velocidad angular estimada de cada encoder, a $200$ muestras/s, en condiciones de robot quieto (línea base de ruido) y en movimiento (rutinas de traslación y giro). El análisis frecuencial (FFT) de ambas condiciones permite acotar la banda de la señal de interés (relacionada con la dinámica real del movimiento del robot, de baja frecuencia) frente a la banda del ruido (de banda más ancha, asociada a vibración mecánica y ruido electrónico). Con base en ese análisis se diseñan y comparan tres estrategias: un filtro convencional (IIR pasa-bajos, por su menor orden/costo), un filtro de media móvil, y un filtro autorregresivo de orden bajo, cada uno evaluado primero en simulación sobre los datos capturados y luego implementado en línea en el microcontrolador.
+
+\subsection{Robot Minisumo teleoperado}
+
+El robot es un chasis diferencial de $10\times10$ cm y peso $\leq 500$ g, con dos ruedas propulsoras accionadas por motorreductores DC con encoder y PWM, y una IMU montada en el chasis. El control de velocidad de cada motor se implementa como un lazo PID de bajo nivel en el microcontrolador, con la velocidad angular de referencia enviada de forma inalámbrica desde un nodo ROS2 en un PC con Linux; los datos de los sensores (filtrados y sin filtrar) se transmiten de vuelta al PC y se almacenan en CSV para su posterior análisis. La odometría (Sección~\ref{sec:odometria} del Fundamento) se calcula en línea a partir de las velocidades de encoder filtradas, y se contrasta, para cada rutina de movimiento programada, contra la posición final real medida físicamente al finalizar cada iteración (Tabla~\ref{tab:posicion}).

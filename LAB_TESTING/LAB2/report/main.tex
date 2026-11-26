@@ -1,0 +1,97 @@
+% ============================================================
+% Técnicas de filtrado digital de señales (LAB2)
+%
+% Basado en la guía "02 Practica2": filtrado de señales periódicas
+% (FIR/IIR convencionales), filtrado de señales de sensores (IMU +
+% encoder, convencional/adaptativo/estadístico), y construcción de
+% un robot Minisumo teleoperado (ROS2) sobre un microcontrolador de
+% 32 bits (STM32/ESP32).
+%
+% NOTA DOCENTE: este informe es una PLANTILLA ILUSTRATIVA que muestra
+% la estructura esperada y el tipo de valores (realistas, no de
+% hardware real) que debería contener el informe final una vez
+% ejecutada la práctica. Sirve como ejemplo de referencia para los
+% estudiantes, no como entrega de resultados experimentales reales.
+%
+% Para compilar: pdflatex main.tex (dos pasadas si se usa \ref/\eqref)
+% ============================================================
+
+\documentclass[conference]{IEEEtran}
+
+% ============================================================
+% PAQUETES
+% ============================================================
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+
+\usepackage{cite}
+\usepackage{url}
+
+\usepackage{xcolor}
+
+\graphicspath{{figuras/}}
+
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  frame=single,
+  columns=fullflexible
+}
+
+% ============================================================
+% INFORMACIÓN DEL DOCUMENTO
+% ============================================================
+
+\title{
+Técnicas de filtrado digital convencional y adaptativo aplicadas a señales periódicas, señales de sensores y teleoperación de un robot Minisumo
+}
+
+\author{
+\IEEEauthorblockN{Daniel García Araque}
+\IEEEauthorblockA{
+Programa de Ingeniería Mecatrónica\\
+Universidad Militar Nueva Granada\\
+Bogotá, Colombia\\
+Código 7004185\\
+est.daniel.garciaa@unimilitar.edu.co
+}
+\and
+\IEEEauthorblockN{Miguel Ángel Gordillo Mejía}
+\IEEEauthorblockA{
+Programa de Ingeniería Mecatrónica\\
+Universidad Militar Nueva Granada\\
+Bogotá, Colombia\\
+Código 7004909\\
+est.miguel.gordillo@unimilitar.edu.co
+}
+}
+
+% ============================================================
+% DOCUMENTO
+% ============================================================
+
+\begin{document}
+
+\maketitle
+
+\input{secciones/resumen}
+\input{secciones/introduccion}
+\input{secciones/fundamento}
+\input{secciones/metodologia}
+\input{secciones/resultados}
+\input{secciones/discusion}
+\input{secciones/conclusiones}
+\input{secciones/referencias}
+
+\end{document}

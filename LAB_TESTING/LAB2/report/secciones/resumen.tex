@@ -1,0 +1,19 @@
+% ============================================================
+% RESUMEN
+% ============================================================
+
+\begin{abstract}
+
+Este informe documenta el diseño, simulación e implementación de técnicas de filtrado digital sobre un microcontrolador de 32 bits (ESP32), desarrollado para la práctica \texttt{LAB2} del curso de Procesamiento Digital de Señales, continuación directa de \texttt{LAB1}. El trabajo abarca tres frentes: (1) filtrado convencional de señales periódicas generadas externamente (50--200 Hz, muestreadas a $500$ muestras/s) mediante filtros FIR e IIR diseñados en MATLAB con especificaciones de frecuencia de corte, ganancia de banda rechazada y ancho de banda de transición, comparando desempeño en ganancia y en fase entre ambas familias y entre reconstrucción por PWM y por DAC; (2) filtrado de las señales de los sensores embarcados en el robot (unidad inercial IMU y encoders de los motorreductores, muestreados a $200$ muestras/s), evaluando estrategias convencionales (FIR/IIR), adaptativas y estadísticas (media móvil, autorregresivo) frente a sus requerimientos de cómputo y memoria; y (3) la construcción de un robot móvil diferencial tipo Minisumo (10×10 cm, peso máximo 500 g) teleoperado de forma inalámbrica desde un PC con Linux y ROS2, con control de velocidad de bajo nivel (PID) sobre cada motor y estimación de posición a partir de odometría de encoders, contrastada contra la posición real medida físicamente. \textbf{Este documento es una plantilla ilustrativa}: los valores de las tablas de resultados (amplitudes, desfases, anchos de banda, posiciones estimadas) son valores de ejemplo, representativos del comportamiento esperado de un sistema de este tipo, incluidos únicamente para mostrar la estructura y el formato que debe tener el informe final una vez se disponga de capturas reales de hardware (osciloscopio, generador de señales, IMU, encoders y el robot Minisumo ensamblado). Todo el código de este proyecto está disponible en el repositorio público en \url{https://github.com/DanielAraqueStudios/Signals-frecuency/tree/main/LAB_TESTING/LAB2}.
+
+\end{abstract}
+
+% ============================================================
+% PALABRAS CLAVE
+% ============================================================
+
+\begin{IEEEkeywords}
+
+Filtro FIR, filtro IIR, filtro adaptativo, media móvil, autorregresivo, IMU, encoder, PWM, DAC, robot Minisumo, ROS2, odometría, control PID.
+
+\end{IEEEkeywords}
